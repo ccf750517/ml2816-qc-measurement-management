@@ -1,0 +1,2230 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ML2816 QC 量測管理介面 v1.10.1</title>
+<style>
+:root{
+  --bg:#f4f6f8; --panel:#ffffff; --line:#d8dee6; --text:#17202a; --muted:#657180;
+  --accent:#1f5f8b; --accent2:#e9f2f8; --ok:#147a45; --okbg:#e8f5ed;
+  --ng:#c62828; --ngbg:#fdecec; --warn:#9a6700; --warnbg:#fff4d6; --input:#fffef8;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI","Microsoft JhengHei",Arial,sans-serif;background:var(--bg);color:var(--text)}
+header{background:#163a56;color:white;padding:16px 22px;display:flex;gap:14px;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20;box-shadow:0 2px 8px #0002}
+header h1{font-size:20px;margin:0;font-weight:700}
+header .sub{font-size:12px;opacity:.85;margin-top:3px}
+nav{display:flex;gap:6px;flex-wrap:wrap}
+nav button{border:1px solid #ffffff55;background:#ffffff10;color:white;padding:8px 12px;border-radius:8px;cursor:pointer}
+nav button.active{background:white;color:#163a56;font-weight:700}
+main{max-width:1400px;margin:18px auto;padding:0 16px 40px}
+.view{display:none}.view.active{display:block}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px;box-shadow:0 2px 8px #00000008}
+.panel h2{margin:0 0 12px;font-size:18px}
+.note{font-size:13px;color:var(--muted);line-height:1.6}
+.rulebar{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:10px;margin:12px 0}
+.rule{background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:13px}
+.rule b{display:block;margin-bottom:4px}
+.stepper{display:flex;gap:8px;margin-bottom:14px;overflow:auto}
+.stepchip{flex:1;min-width:155px;border:1px solid var(--line);border-radius:9px;padding:10px;background:#fafbfc;cursor:pointer}
+.stepchip.current{border-color:var(--accent);background:var(--accent2);font-weight:700}
+.stepchip.done{border-color:#86c6a1;background:#eef9f2}
+.stepchip .n{display:inline-flex;width:22px;height:22px;border-radius:50%;align-items:center;justify-content:center;background:#dce4ea;margin-right:7px;font-size:12px}
+.stepchip.current .n{background:var(--accent);color:white}
+.step{display:none}.step.active{display:block}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.card{border:1px solid var(--line);border-radius:10px;padding:14px;background:#fbfcfd}
+.card h3{margin:0 0 10px;font-size:15px}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+.field{margin-bottom:10px}
+input,select{width:100%;padding:9px 10px;border:1px solid #bfc9d4;border-radius:7px;background:var(--input);font:inherit}
+input:focus,select:focus{outline:2px solid #7eb5da55;border-color:var(--accent)}
+input.invalid{color:var(--ng);border-color:var(--ng);background:var(--ngbg);font-weight:700}
+.metric .value.ng-value,.ng-value{color:var(--ng);font-weight:800}
+.abnormal-panel{margin-top:12px;border:1px solid #e5b8b8;background:#fff7f7;border-radius:10px;padding:12px}
+.abnormal-panel.ok-panel{border-color:#b9dcc7;background:#f7fcf9}
+.abnormal-title{font-weight:800;margin-bottom:6px}
+.abnormal-list{margin:0;padding-left:20px}
+.abnormal-list li{margin:5px 0;color:var(--ng);font-weight:750}
+.gap-result{font-size:18px;font-weight:800}
+.gap-result.ng-value{color:var(--ng)}
+.readonly{background:#f0f3f6!important;color:#4d5966}
+.metric{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px dashed #dfe5eb;font-size:13px}
+.metric:last-child{border-bottom:0}
+.value{font-variant-numeric:tabular-nums;font-weight:700}
+.badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700}
+.badge.ok{color:var(--ok);background:var(--okbg)}
+.badge.ng{color:var(--ng);background:var(--ngbg)}
+.badge.pending{color:var(--warn);background:var(--warnbg)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+button.primary,button.secondary,button.danger{padding:9px 14px;border-radius:8px;border:1px solid transparent;cursor:pointer;font-weight:600}
+button.primary{background:var(--accent);color:white}
+button.secondary{background:white;border-color:#b8c4cf;color:#294356}
+button.danger{background:white;border-color:#e0a3a3;color:#a61b1b}
+button:disabled{opacity:.45;cursor:not-allowed}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.toolbar input{max-width:330px}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:1100px;font-size:12px}
+th,td{border-bottom:1px solid #e5e9ee;padding:8px 9px;text-align:center;white-space:nowrap}
+th{background:#eef3f7;position:sticky;top:0;z-index:1}
+td.left{text-align:left}
+tr:hover td{background:#fafcff}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.kpi{border:1px solid var(--line);border-radius:10px;padding:13px;background:white}
+.kpi .label{font-size:12px;color:var(--muted)}
+.kpi .num{font-size:24px;font-weight:750;margin-top:4px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.chartbox{border:1px solid var(--line);border-radius:10px;padding:12px;background:white}
+canvas{width:100%;height:320px}
+.small{font-size:11px;color:var(--muted)}
+.statusline{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.qtybar{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin:14px 0 10px}
+.qtybar .field{margin:0;min-width:180px;max-width:260px}
+.qtybar button{min-height:40px}
+.row-remove{padding:6px 10px!important;font-size:12px}
+
+/* ØF 加工單：同頁預覽，避免瀏覽器阻擋彈出視窗 */
+#fWorkOrderPreviewPanel{display:none;margin-top:4px}
+#fWorkOrderPreviewPanel .workorder-sheet{background:#fff;color:#111;border:1px solid #b9c2ca;border-radius:8px;padding:18px;overflow:auto}
+/* v1.10.1：所有列印／PDF 文件共用的預覽放大縮小；只影響螢幕，不影響輸出比例 */
+#fWorkOrderPreviewPanel .report-zoom-viewport{width:100%;max-width:100%;overflow:auto;border-radius:8px}
+#fWorkOrderPreviewPanel .preview-zoom-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:8px 0 10px;padding:8px 10px;border:1px solid #d3dbe3;border-radius:9px;background:#f8fafc}
+#fWorkOrderPreviewPanel .preview-zoom-label{display:flex;align-items:center;gap:8px;min-width:0;color:#425466;font-size:12px}
+#fWorkOrderPreviewPanel .preview-zoom-label b{color:#203040}
+#fWorkOrderPreviewPanel .preview-doc-type{font-weight:800;color:#334b5f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:380px}
+#fWorkOrderPreviewPanel .zoom-controls{display:inline-flex;align-items:center;gap:5px;padding:3px 5px;border:1px solid #c8d1da;border-radius:8px;background:#fff}
+#fWorkOrderPreviewPanel .zoom-controls button{min-height:36px;padding:6px 10px;white-space:nowrap}
+#fWorkOrderPreviewPanel .zoom-value{min-width:52px;text-align:center;font-size:13px;font-weight:900;color:#24384a;font-variant-numeric:tabular-nums}
+@media(max-width:720px){#fWorkOrderPreviewPanel .preview-zoom-toolbar{align-items:stretch}#fWorkOrderPreviewPanel .preview-zoom-label{width:100%}#fWorkOrderPreviewPanel .zoom-controls{width:100%;justify-content:center;flex-wrap:wrap}}
+
+/* v1.10.2：進入瀏覽器原生列印視窗前的「列印專用預覽」；可放大檢查，但不改實際輸出比例 */
+#printStageOverlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(31,41,55,.78);padding:18px;box-sizing:border-box}
+#printStageOverlay.open{display:flex;flex-direction:column}
+#printStageBar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#fff;border-radius:10px;padding:10px 12px;margin-bottom:10px;box-shadow:0 2px 12px rgba(0,0,0,.18)}
+#printStageBar .stage-left,#printStageBar .stage-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#printStageTitle{font-weight:900;color:#17324a}
+#printStageStatus{font-size:12px;color:#607080}
+#printStageViewport{flex:1 1 auto;min-height:0;overflow:auto;background:#d9dde2;border-radius:10px;padding:24px;text-align:center}
+#printStagePaper{display:inline-block;text-align:left;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.22);transform-origin:top left;vertical-align:top}
+#printStagePaper.workorder-sheet{margin:0;max-width:none}
+#printStageZoomValue{min-width:54px;text-align:center;font-weight:900;font-variant-numeric:tabular-nums}
+#printStageOverlay .stage-hint{font-size:12px;color:#455565;background:#f8fafc;border:1px solid #d7dee6;border-radius:8px;padding:7px 9px}
+@media(max-width:720px){#printStageOverlay{padding:8px}#printStageViewport{padding:12px}#printStageBar{align-items:stretch}#printStageBar .stage-left,#printStageBar .stage-right{width:100%}}
+#fWorkOrderPreviewPanel .wo-title{text-align:center;font-size:22px;font-weight:800;margin:0 0 4px}
+#fWorkOrderPreviewPanel .wo-sub{text-align:center;font-size:12px;margin-bottom:12px;color:#444}
+#fWorkOrderPreviewPanel .wo-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px 22px;margin:10px 0 12px}
+#fWorkOrderPreviewPanel .wo-meta>div{border-bottom:1px solid #777;padding:3px 0}
+#fWorkOrderPreviewPanel .wo-table{min-width:980px;width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
+#fWorkOrderPreviewPanel .wo-table th,#fWorkOrderPreviewPanel .wo-table td{border:1px solid #333;padding:6px 5px;text-align:center;vertical-align:middle;white-space:nowrap}
+#fWorkOrderPreviewPanel .wo-table th{background:#eee;position:static;color:#111}
+#fWorkOrderPreviewPanel .wo-spec{margin-top:12px;border:1px solid #333;padding:9px;font-size:12px}
+#fWorkOrderPreviewPanel .wo-sign{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-top:24px}
+#fWorkOrderPreviewPanel .wo-sign>div{border-bottom:1px solid #555;padding:16px 4px 4px}
+#fWorkOrderPreviewPanel .wo-hint{text-align:center;color:#657180;margin-top:8px;font-size:12px}
+/* 套筒研磨尺寸表：直向 A4 優化，避免右側欄位被截斷 */
+#fWorkOrderPrintArea.sleeve-print .wo-table{min-width:0!important;table-layout:fixed}
+#fWorkOrderPrintArea.sleeve-print .wo-table th,#fWorkOrderPrintArea.sleeve-print .wo-table td{white-space:normal;line-height:1.25}
+#fWorkOrderPrintArea.sleeve-print .wo-table th:nth-child(1){width:7%}
+#fWorkOrderPrintArea.sleeve-print .wo-table th:nth-child(2){width:13%}
+#fWorkOrderPrintArea.sleeve-print .wo-table th:nth-child(3){width:6%}
+#fWorkOrderPrintArea.sleeve-print .wo-table th:nth-child(4){width:11%}
+#fWorkOrderPrintArea.sleeve-print .wo-table th:nth-child(5){width:12%}
+#fWorkOrderPrintArea.sleeve-print .wo-table th:nth-child(6){width:19%}
+#fWorkOrderPrintArea.sleeve-print .wo-table th:nth-child(7){width:12%}
+#fWorkOrderPrintArea.sleeve-print .wo-table th:nth-child(8){width:20%}
+
+/* 油壓缸完整量測履歷表 */
+#fWorkOrderPrintArea.cylinder-report{font-size:12px}
+#fWorkOrderPrintArea.cylinder-report .report-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;border-bottom:2px solid #222;padding-bottom:8px;margin-bottom:10px}
+#fWorkOrderPrintArea.cylinder-report .report-title{font-size:22px;font-weight:900;letter-spacing:.5px}
+#fWorkOrderPrintArea.cylinder-report .report-sub{font-size:12px;color:#555;margin-top:3px}
+#fWorkOrderPrintArea.cylinder-report .report-result{font-size:18px;font-weight:900;white-space:nowrap}
+#fWorkOrderPrintArea.cylinder-report .report-meta{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #333;margin-bottom:10px}
+#fWorkOrderPrintArea.cylinder-report .report-meta>div{padding:6px 8px;border-bottom:1px solid #bbb}
+#fWorkOrderPrintArea.cylinder-report .report-meta>div:nth-child(odd){border-right:1px solid #bbb}
+#fWorkOrderPrintArea.cylinder-report .report-meta>div:nth-last-child(-n+2){border-bottom:0}
+#fWorkOrderPrintArea.cylinder-report .report-section{margin-top:10px;break-inside:avoid;page-break-inside:avoid}
+#fWorkOrderPrintArea.cylinder-report .report-section-title{font-weight:900;font-size:14px;border-left:4px solid #333;padding-left:7px;margin:0 0 5px}
+#fWorkOrderPrintArea.cylinder-report .report-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:11.5px}
+#fWorkOrderPrintArea.cylinder-report .report-table th,#fWorkOrderPrintArea.cylinder-report .report-table td{border:1px solid #555;padding:5px 5px;text-align:center;vertical-align:middle;white-space:normal;word-break:break-word}
+#fWorkOrderPrintArea.cylinder-report .report-table th{background:#eee;color:#111;font-weight:800}
+#fWorkOrderPrintArea.cylinder-report .report-ng{color:#c00000!important;font-weight:900}
+#fWorkOrderPrintArea.cylinder-report .report-pass{font-weight:800}
+#fWorkOrderPrintArea.cylinder-report .report-summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+#fWorkOrderPrintArea.cylinder-report .report-summary>div{border:1px solid #555;padding:8px}
+#fWorkOrderPrintArea.cylinder-report .report-abnormal{border:1px solid #555;padding:8px;margin-top:10px;min-height:38px}
+#fWorkOrderPrintArea.cylinder-report .report-sign{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-top:20px}
+#fWorkOrderPrintArea.cylinder-report .report-sign>div{border-bottom:1px solid #555;padding:14px 4px 4px}
+@media(max-width:700px){#fWorkOrderPrintArea.cylinder-report .report-meta,#fWorkOrderPrintArea.cylinder-report .report-summary{grid-template-columns:1fr}#fWorkOrderPrintArea.cylinder-report .report-meta>div{border-right:0!important}}
+
+
+/* 油壓缸完整量測履歷｜集中比較版（依原始 ML2816 分類模式） */
+/* v1.9.5：主表移除「間隙」欄；間隙計算與下方判定摘要仍保留 */
+#fWorkOrderPrintArea.cylinder-compact{font-size:12px}
+#fWorkOrderPrintArea.cylinder-compact .compact-report-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;border-bottom:2px solid #222;padding-bottom:7px;margin-bottom:8px}
+#fWorkOrderPrintArea.cylinder-compact .compact-tag{display:inline-block;margin-left:7px;padding:2px 7px;border:1px solid #7b8793;border-radius:999px;font-size:10px;font-weight:700;vertical-align:middle}
+#fWorkOrderPrintArea.cylinder-compact .compact-meta-line{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:0 0 8px;padding:6px 8px;border:1px solid #888;background:#fafafa}
+#fWorkOrderPrintArea.cylinder-compact .compact-table-wrap{overflow:auto;border:1px solid #333}
+#fWorkOrderPrintArea.cylinder-compact .compact-table{width:100%;min-width:1000px;border-collapse:collapse;table-layout:fixed;font-size:11.5px}
+#fWorkOrderPrintArea.cylinder-compact .compact-table th,#fWorkOrderPrintArea.cylinder-compact .compact-table td{border:1px solid #555;padding:5px 3px;text-align:center;vertical-align:middle;line-height:1.25;white-space:normal;word-break:break-word}
+#fWorkOrderPrintArea.cylinder-compact .compact-table thead th{font-weight:900;color:#111}
+#fWorkOrderPrintArea.cylinder-compact .compact-table .group-head{font-size:14px;letter-spacing:.06em;padding:7px 3px}
+#fWorkOrderPrintArea.cylinder-compact .compact-table .grp-bearing{background:#dce6f1}
+#fWorkOrderPrintArea.cylinder-compact .compact-table .grp-rotary{background:#fff2cc}
+#fWorkOrderPrintArea.cylinder-compact .compact-table .grp-sleeve{background:#e2f0d9}
+#fWorkOrderPrintArea.cylinder-compact .compact-table .grp-total{background:#e7e6e6}
+#fWorkOrderPrintArea.cylinder-compact .compact-table .sub-bearing{background:#eef3f8}
+#fWorkOrderPrintArea.cylinder-compact .compact-table .sub-rotary{background:#fff8df}
+#fWorkOrderPrintArea.cylinder-compact .compact-table .sub-sleeve{background:#eef7e9}
+#fWorkOrderPrintArea.cylinder-compact .compact-table .shared-cell{background:#fcfcfc;font-weight:700}
+#fWorkOrderPrintArea.cylinder-compact .compact-table .actual-cell{font-weight:850;font-size:12px}
+#fWorkOrderPrintArea.cylinder-compact .compact-table .status-cell{font-size:10px;font-weight:900}
+#fWorkOrderPrintArea.cylinder-compact .compact-mini-status{display:block;margin-top:3px;font-size:9px}
+#fWorkOrderPrintArea.cylinder-compact .compact-judge-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0;border:1px solid #555;border-top:0;margin-top:0}
+#fWorkOrderPrintArea.cylinder-compact .compact-judge-grid>div{padding:7px 5px;text-align:center;border-right:1px solid #bbb;font-size:11.5px}
+#fWorkOrderPrintArea.cylinder-compact .compact-judge-grid>div:last-child{border-right:0}
+#fWorkOrderPrintArea.cylinder-compact .compact-abnormal{border:1px solid #555;border-top:0;padding:8px;min-height:34px}
+#fWorkOrderPrintArea.cylinder-compact .compact-note{font-size:9.5px;color:#555;margin-top:5px}
+#fWorkOrderPrintArea.cylinder-compact .compact-sign{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-top:18px}
+#fWorkOrderPrintArea.cylinder-compact .compact-sign>div{border-bottom:1px solid #555;padding:13px 4px 4px}
+@media(max-width:900px){
+  #fWorkOrderPrintArea.cylinder-compact .compact-judge-grid{grid-template-columns:repeat(3,1fr)}
+}
+#fWorkOrderPrintArea.cylinder-compact .compact-table tbody.cylinder-group tr:first-child td{border-top:2px solid #333}
+#fWorkOrderPrintArea.cylinder-compact .multi-summary-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:11px}
+#fWorkOrderPrintArea.cylinder-compact .multi-summary-table th,#fWorkOrderPrintArea.cylinder-compact .multi-summary-table td{border:1px solid #777;padding:5px 4px;text-align:center;vertical-align:middle}
+#fWorkOrderPrintArea.cylinder-compact .multi-summary-table th{background:#f1f3f5;font-weight:900}
+#fWorkOrderPrintArea.cylinder-compact .multi-abnormal{border:1px solid #555;border-top:0;padding:8px;min-height:34px}
+#fWorkOrderPrintArea .multi-detail-item{break-inside:avoid;page-break-inside:avoid}
+#fWorkOrderPrintArea .multi-detail-item+.multi-detail-item{margin-top:22px;padding-top:18px;border-top:3px double #666}
+
+
+/* v1.10.3：修正列印前預覽。
+   printStagePaper 是正式文件的唯讀複本，因此同步套用原預覽區的文件樣式；
+   縮放只作用於整張文件，不再重新排版內部表格。 */
+/* ØF 加工單：同頁預覽，避免瀏覽器阻擋彈出視窗 */
+#printStageOverlay{display:none;margin-top:4px}
+#printStageOverlay .workorder-sheet{background:#fff;color:#111;border:1px solid #b9c2ca;border-radius:8px;padding:18px;overflow:auto}
+/* v1.10.1：所有列印／PDF 文件共用的預覽放大縮小；只影響螢幕，不影響輸出比例 */
+#printStageOverlay .report-zoom-viewport{width:100%;max-width:100%;overflow:auto;border-radius:8px}
+#printStageOverlay .preview-zoom-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:8px 0 10px;padding:8px 10px;border:1px solid #d3dbe3;border-radius:9px;background:#f8fafc}
+#printStageOverlay .preview-zoom-label{display:flex;align-items:center;gap:8px;min-width:0;color:#425466;font-size:12px}
+#printStageOverlay .preview-zoom-label b{color:#203040}
+#printStageOverlay .preview-doc-type{font-weight:800;color:#334b5f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:380px}
+#printStageOverlay .zoom-controls{display:inline-flex;align-items:center;gap:5px;padding:3px 5px;border:1px solid #c8d1da;border-radius:8px;background:#fff}
+#printStageOverlay .zoom-controls button{min-height:36px;padding:6px 10px;white-space:nowrap}
+#printStageOverlay .zoom-value{min-width:52px;text-align:center;font-size:13px;font-weight:900;color:#24384a;font-variant-numeric:tabular-nums}
+@media(max-width:720px){#printStageOverlay .preview-zoom-toolbar{align-items:stretch}#printStageOverlay .preview-zoom-label{width:100%}#printStageOverlay .zoom-controls{width:100%;justify-content:center;flex-wrap:wrap}}
+
+/* v1.10.3：列印前預覽沿用正式文件樣式 */
+#printStageOverlay .wo-title{text-align:center;font-size:22px;font-weight:800;margin:0 0 4px}
+#printStageOverlay .wo-sub{text-align:center;font-size:12px;margin-bottom:12px;color:#444}
+#printStageOverlay .wo-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px 22px;margin:10px 0 12px}
+#printStageOverlay .wo-meta>div{border-bottom:1px solid #777;padding:3px 0}
+#printStageOverlay .wo-table{min-width:980px;width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
+#printStageOverlay .wo-table th,#printStageOverlay .wo-table td{border:1px solid #333;padding:6px 5px;text-align:center;vertical-align:middle;white-space:nowrap}
+#printStageOverlay .wo-table th{background:#eee;position:static;color:#111}
+#printStageOverlay .wo-spec{margin-top:12px;border:1px solid #333;padding:9px;font-size:12px}
+#printStageOverlay .wo-sign{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-top:24px}
+#printStageOverlay .wo-sign>div{border-bottom:1px solid #555;padding:16px 4px 4px}
+#printStageOverlay .wo-hint{text-align:center;color:#657180;margin-top:8px;font-size:12px}
+/* 套筒研磨尺寸表：直向 A4 優化，避免右側欄位被截斷 */
+#printStagePaper.sleeve-print .wo-table{min-width:0!important;table-layout:fixed}
+#printStagePaper.sleeve-print .wo-table th,#printStagePaper.sleeve-print .wo-table td{white-space:normal;line-height:1.25}
+#printStagePaper.sleeve-print .wo-table th:nth-child(1){width:7%}
+#printStagePaper.sleeve-print .wo-table th:nth-child(2){width:13%}
+#printStagePaper.sleeve-print .wo-table th:nth-child(3){width:6%}
+#printStagePaper.sleeve-print .wo-table th:nth-child(4){width:11%}
+#printStagePaper.sleeve-print .wo-table th:nth-child(5){width:12%}
+#printStagePaper.sleeve-print .wo-table th:nth-child(6){width:19%}
+#printStagePaper.sleeve-print .wo-table th:nth-child(7){width:12%}
+#printStagePaper.sleeve-print .wo-table th:nth-child(8){width:20%}
+
+/* 油壓缸完整量測履歷表 */
+#printStagePaper.cylinder-report{font-size:12px}
+#printStagePaper.cylinder-report .report-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;border-bottom:2px solid #222;padding-bottom:8px;margin-bottom:10px}
+#printStagePaper.cylinder-report .report-title{font-size:22px;font-weight:900;letter-spacing:.5px}
+#printStagePaper.cylinder-report .report-sub{font-size:12px;color:#555;margin-top:3px}
+#printStagePaper.cylinder-report .report-result{font-size:18px;font-weight:900;white-space:nowrap}
+#printStagePaper.cylinder-report .report-meta{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #333;margin-bottom:10px}
+#printStagePaper.cylinder-report .report-meta>div{padding:6px 8px;border-bottom:1px solid #bbb}
+#printStagePaper.cylinder-report .report-meta>div:nth-child(odd){border-right:1px solid #bbb}
+#printStagePaper.cylinder-report .report-meta>div:nth-last-child(-n+2){border-bottom:0}
+#printStagePaper.cylinder-report .report-section{margin-top:10px;break-inside:avoid;page-break-inside:avoid}
+#printStagePaper.cylinder-report .report-section-title{font-weight:900;font-size:14px;border-left:4px solid #333;padding-left:7px;margin:0 0 5px}
+#printStagePaper.cylinder-report .report-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:11.5px}
+#printStagePaper.cylinder-report .report-table th,#printStagePaper.cylinder-report .report-table td{border:1px solid #555;padding:5px 5px;text-align:center;vertical-align:middle;white-space:normal;word-break:break-word}
+#printStagePaper.cylinder-report .report-table th{background:#eee;color:#111;font-weight:800}
+#printStagePaper.cylinder-report .report-ng{color:#c00000!important;font-weight:900}
+#printStagePaper.cylinder-report .report-pass{font-weight:800}
+#printStagePaper.cylinder-report .report-summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+#printStagePaper.cylinder-report .report-summary>div{border:1px solid #555;padding:8px}
+#printStagePaper.cylinder-report .report-abnormal{border:1px solid #555;padding:8px;margin-top:10px;min-height:38px}
+#printStagePaper.cylinder-report .report-sign{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-top:20px}
+#printStagePaper.cylinder-report .report-sign>div{border-bottom:1px solid #555;padding:14px 4px 4px}
+@media(max-width:700px){#printStagePaper.cylinder-report .report-meta,#printStagePaper.cylinder-report .report-summary{grid-template-columns:1fr}#printStagePaper.cylinder-report .report-meta>div{border-right:0!important}}
+
+
+/* 油壓缸完整量測履歷｜集中比較版（依原始 ML2816 分類模式） */
+/* v1.9.5：主表移除「間隙」欄；間隙計算與下方判定摘要仍保留 */
+#printStagePaper.cylinder-compact{font-size:12px}
+#printStagePaper.cylinder-compact .compact-report-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;border-bottom:2px solid #222;padding-bottom:7px;margin-bottom:8px}
+#printStagePaper.cylinder-compact .compact-tag{display:inline-block;margin-left:7px;padding:2px 7px;border:1px solid #7b8793;border-radius:999px;font-size:10px;font-weight:700;vertical-align:middle}
+#printStagePaper.cylinder-compact .compact-meta-line{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:0 0 8px;padding:6px 8px;border:1px solid #888;background:#fafafa}
+#printStagePaper.cylinder-compact .compact-table-wrap{overflow:auto;border:1px solid #333}
+#printStagePaper.cylinder-compact .compact-table{width:100%;min-width:1000px;border-collapse:collapse;table-layout:fixed;font-size:11.5px}
+#printStagePaper.cylinder-compact .compact-table th,#printStagePaper.cylinder-compact .compact-table td{border:1px solid #555;padding:5px 3px;text-align:center;vertical-align:middle;line-height:1.25;white-space:normal;word-break:break-word}
+#printStagePaper.cylinder-compact .compact-table thead th{font-weight:900;color:#111}
+#printStagePaper.cylinder-compact .compact-table .group-head{font-size:14px;letter-spacing:.06em;padding:7px 3px}
+#printStagePaper.cylinder-compact .compact-table .grp-bearing{background:#dce6f1}
+#printStagePaper.cylinder-compact .compact-table .grp-rotary{background:#fff2cc}
+#printStagePaper.cylinder-compact .compact-table .grp-sleeve{background:#e2f0d9}
+#printStagePaper.cylinder-compact .compact-table .grp-total{background:#e7e6e6}
+#printStagePaper.cylinder-compact .compact-table .sub-bearing{background:#eef3f8}
+#printStagePaper.cylinder-compact .compact-table .sub-rotary{background:#fff8df}
+#printStagePaper.cylinder-compact .compact-table .sub-sleeve{background:#eef7e9}
+#printStagePaper.cylinder-compact .compact-table .shared-cell{background:#fcfcfc;font-weight:700}
+#printStagePaper.cylinder-compact .compact-table .actual-cell{font-weight:850;font-size:12px}
+#printStagePaper.cylinder-compact .compact-table .status-cell{font-size:10px;font-weight:900}
+#printStagePaper.cylinder-compact .compact-mini-status{display:block;margin-top:3px;font-size:9px}
+#printStagePaper.cylinder-compact .compact-judge-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0;border:1px solid #555;border-top:0;margin-top:0}
+#printStagePaper.cylinder-compact .compact-judge-grid>div{padding:7px 5px;text-align:center;border-right:1px solid #bbb;font-size:11.5px}
+#printStagePaper.cylinder-compact .compact-judge-grid>div:last-child{border-right:0}
+#printStagePaper.cylinder-compact .compact-abnormal{border:1px solid #555;border-top:0;padding:8px;min-height:34px}
+#printStagePaper.cylinder-compact .compact-note{font-size:9.5px;color:#555;margin-top:5px}
+#printStagePaper.cylinder-compact .compact-sign{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-top:18px}
+#printStagePaper.cylinder-compact .compact-sign>div{border-bottom:1px solid #555;padding:13px 4px 4px}
+@media(max-width:900px){
+  #printStagePaper.cylinder-compact .compact-judge-grid{grid-template-columns:repeat(3,1fr)}
+}
+#printStagePaper.cylinder-compact .compact-table tbody.cylinder-group tr:first-child td{border-top:2px solid #333}
+#printStagePaper.cylinder-compact .multi-summary-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:11px}
+#printStagePaper.cylinder-compact .multi-summary-table th,#printStagePaper.cylinder-compact .multi-summary-table td{border:1px solid #777;padding:5px 4px;text-align:center;vertical-align:middle}
+#printStagePaper.cylinder-compact .multi-summary-table th{background:#f1f3f5;font-weight:900}
+#printStagePaper.cylinder-compact .multi-abnormal{border:1px solid #555;border-top:0;padding:8px;min-height:34px}
+#printStagePaper .multi-detail-item{break-inside:avoid;page-break-inside:avoid}
+#printStagePaper .multi-detail-item+.multi-detail-item{margin-top:22px;padding-top:18px;border-top:3px double #666}
+
+
+#printStagePaper.workorder-sheet{
+  overflow:visible!important;
+  box-sizing:border-box!important;
+  border-radius:0!important;
+  margin:0!important;
+}
+#printStagePaper.cylinder-compact .compact-table-wrap,
+#printStagePaper.sleeve-print .tablewrap{overflow:visible!important}
+@page{margin:9mm}
+@media print{
+  body.print-workorder{background:white!important}
+  body.print-workorder header{display:none!important}
+  body.print-workorder main>.view{display:none!important}
+  body.print-workorder #fWorkOrderPreviewPanel{display:block!important;margin:0!important}
+  body.print-workorder #fWorkOrderPreviewPanel>.panel{border:0!important;box-shadow:none!important;padding:0!important;margin:0!important}
+  body.print-workorder #fWorkOrderPreviewPanel .no-print{display:none!important}
+  #printStageOverlay{display:none!important}
+  body.print-workorder #fWorkOrderPreviewPanel .report-zoom-viewport{overflow:visible!important}
+  body.print-workorder #fWorkOrderPreviewPanel .workorder-sheet{border:0!important;border-radius:0!important;padding:0!important;overflow:visible!important;zoom:1!important}
+  body.print-workorder #fWorkOrderPreviewPanel .wo-table{min-width:0!important;font-size:10.5px!important;page-break-inside:auto}
+  body.print-workorder #fWorkOrderPreviewPanel .wo-table thead{display:table-header-group}
+  body.print-workorder #fWorkOrderPreviewPanel .wo-table tr{page-break-inside:avoid;page-break-after:auto}
+  body.print-workorder #fWorkOrderPreviewPanel .wo-table th{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body.print-workorder #fWorkOrderPreviewPanel .wo-sign{page-break-inside:avoid}
+  body.print-workorder #fWorkOrderPrintArea.sleeve-print .wo-title{font-size:18px!important;margin-bottom:2px!important}
+  body.print-workorder #fWorkOrderPrintArea.sleeve-print .wo-sub{font-size:9px!important;margin-bottom:6px!important}
+  body.print-workorder #fWorkOrderPrintArea.sleeve-print .wo-meta{font-size:9.5px!important;gap:3px 14px!important;margin:5px 0 7px!important}
+  body.print-workorder #fWorkOrderPrintArea.sleeve-print .wo-table{width:100%!important;min-width:0!important;table-layout:fixed!important;font-size:8.5px!important;margin-top:4px!important}
+  body.print-workorder #fWorkOrderPrintArea.sleeve-print .wo-table th,
+  body.print-workorder #fWorkOrderPrintArea.sleeve-print .wo-table td{padding:3px 2px!important;white-space:normal!important;overflow-wrap:anywhere!important;line-height:1.18!important}
+  body.print-workorder #fWorkOrderPrintArea.sleeve-print .wo-spec{font-size:8.5px!important;padding:5px!important;margin-top:7px!important;line-height:1.25!important}
+  body.print-workorder #fWorkOrderPrintArea.sleeve-print .wo-sign{font-size:9px!important;gap:12px!important;margin-top:12px!important}
+  body.print-workorder #fWorkOrderPrintArea.sleeve-print .wo-sign>div{padding:9px 3px 3px!important}
+
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .compact-report-head{padding-bottom:5px!important;margin-bottom:5px!important}
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .report-title{font-size:17px!important}
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .report-sub{font-size:8.4px!important}
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .compact-tag{font-size:7px!important;padding:1px 4px!important}
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .compact-meta-line{font-size:8.5px!important;margin-bottom:5px!important;padding:4px 5px!important}
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .compact-table-wrap{overflow:visible!important}
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .compact-table{width:100%!important;min-width:0!important;table-layout:fixed!important;font-size:8.1px!important}
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .compact-table th,
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .compact-table td{padding:2.5px 1.5px!important;line-height:1.16!important;overflow-wrap:anywhere!important}
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .compact-table .group-head{font-size:9.5px!important;padding:4px 1px!important}
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .compact-table .status-cell{font-size:6.7px!important}
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .compact-table thead{display:table-header-group!important}
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .compact-table tbody.cylinder-group{break-inside:avoid!important;page-break-inside:avoid!important}
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .multi-summary-table{font-size:7.2px!important}
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .multi-summary-table th,
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .multi-summary-table td{padding:3px 2px!important}
+  body.print-workorder #fWorkOrderPrintArea .multi-detail-item+.multi-detail-item{break-before:page!important;page-break-before:always!important;margin-top:0!important;padding-top:0!important;border-top:0!important}
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .compact-mini-status{font-size:6px!important;margin-top:1px!important}
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .compact-judge-grid{grid-template-columns:repeat(6,1fr)!important;font-size:7.5px!important}
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .compact-judge-grid>div{padding:4px 2px!important}
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .compact-abnormal{font-size:7.4px!important;padding:5px!important;min-height:24px!important}
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .compact-note{font-size:6.5px!important;margin-top:3px!important}
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .compact-sign{font-size:7.5px!important;gap:10px!important;margin-top:10px!important}
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .compact-sign>div{padding:7px 3px 3px!important}
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .grp-bearing,
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .grp-rotary,
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .grp-sleeve,
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .grp-total,
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .sub-bearing,
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .sub-rotary,
+  body.print-workorder #fWorkOrderPrintArea.cylinder-compact .sub-sleeve{
+    -webkit-print-color-adjust:exact!important;print-color-adjust:exact!important
+  }
+}
+@media(max-width:900px){
+  .grid2,.grid3,.charts{grid-template-columns:1fr}
+  .rulebar{grid-template-columns:1fr 1fr}
+  .kpis{grid-template-columns:1fr 1fr}
+  header{align-items:flex-start;flex-direction:column}
+}
+@media(max-width:520px){.rulebar,.kpis{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>ML2816 QC 量測管理介面</h1>
+    <div class="sub">軸承批次量測 → ØF 加工單 → 迴轉閥量測 → 套筒 ØB／ØC 研磨尺寸表 → 套筒驗收</div>
+  </div>
+  <nav>
+    <button data-view="bearingIntake" class="active">軸承建檔</button>
+    <button data-view="entry">後續量測</button>
+    <button data-view="history">歷史資料</button>
+    <button data-view="analysis">分析圖表</button>
+    <button data-view="backup">備份／還原</button>
+  </nav>
+</header>
+
+<main>
+
+<section id="bearingIntake" class="view active">
+  <div class="panel">
+    <h2>軸承建檔｜先量測，再排序，再正式編號</h2>
+    <div class="note">
+      固定流程：① 先設定本批實際進貨數量，可隨時新增／減少 → ② 依現場量測順序輸入每顆軸承的內徑 D、外徑 E
+      → ③ 系統依內徑 D 由小到大排序 → ④ 排序後才產生正式軸承編號 → ⑤ 每 2 顆依序配成 1 支油壓缸。<br>
+      內徑相同時維持原始輸入順序，不以外徑重新排序；若數量為奇數，最後一顆會標示「待配對」，需再新增 1 顆後才能建立案件。
+    </div>
+
+    <div class="grid3" style="margin-top:14px">
+      <div class="field"><label>本批購入日期</label><input id="batchPurchaseDate" type="date"></div>
+      <div class="field"><label>正式軸承起始號碼</label><input id="batchBearingStart" type="number" min="1" step="1" placeholder="例如 658"></div>
+      <div class="field"><label>油壓缸起始號碼</label><input id="batchCylinderStart" type="number" min="1" step="1" placeholder="例如 329"></div>
+    </div>
+
+    <div class="qtybar">
+      <div class="field">
+        <label>本批軸承數量</label>
+        <input id="batchQty" type="number" min="2" max="200" step="1" value="8">
+      </div>
+      <button class="secondary" type="button" onclick="applyBatchQty()">套用數量</button>
+      <button class="secondary" type="button" onclick="addBatchRow()">＋ 新增 1 顆</button>
+      <button class="secondary" type="button" onclick="removeBatchRow()">－ 移除最後 1 顆</button>
+      <span class="note" id="batchQtyHint">目前 8 顆＝4 組油壓缸</span>
+    </div>
+
+    <div class="tablewrap">
+      <table style="min-width:860px">
+        <thead>
+          <tr><th>輸入順序</th><th>臨時編號</th><th>軸承內徑 D</th><th>軸承外徑 E</th><th>操作</th></tr>
+        </thead>
+        <tbody id="batchInputBody"></tbody>
+      </table>
+    </div>
+    <div class="actions">
+      <button class="primary" onclick="buildBatchPreview()">依內徑排序並產生正式編號</button>
+      <button class="secondary" onclick="clearBatch()">清空本批</button>
+    </div>
+  </div>
+
+  <div class="panel" id="batchPreviewPanel" style="display:none">
+    <h2>排序／正式編號／油壓缸配對預覽</h2>
+    <div class="note" id="batchPreviewNote">請先確認排序及配對；建立後會成為對應數量的「未完成」油壓缸案件，後續再依序輸入迴轉閥與套筒量測值。</div>
+    <div class="toolbar" style="margin-top:4px">
+      <b>ØF 加工單複選：</b>
+      <button class="secondary" type="button" onclick="selectAllBatchWorkOrders()">全選可配對工單</button>
+      <button class="secondary" type="button" onclick="clearBatchWorkOrderSelection()">清除選取</button>
+      <span class="note" id="batchWorkOrderSelectionHint">尚未選取工單</span>
+    </div>
+    <div class="tablewrap">
+      <table style="min-width:980px">
+        <thead>
+          <tr>
+            <th>工單選取</th><th>排序順位</th><th>正式軸承編號</th><th>原輸入順序</th>
+            <th>內徑 D</th><th>外徑 E</th><th>ØF 下限</th><th>ØF 上限</th><th>配對油壓缸</th>
+          </tr>
+        </thead>
+        <tbody id="batchPreviewBody"></tbody>
+      </table>
+    </div>
+    <div class="actions">
+      <button class="primary" id="createBatchBtn" onclick="createBatchRecords()">確認並建立油壓缸案件</button>
+      <button class="secondary" id="exportBatchFBtn" onclick="exportSelectedBatchFWorkOrder()">輸出已選 ØF 加工單</button>
+      <button class="secondary" onclick="showView('entry')">前往後續量測</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>a1 → a2 → a3 的編號規則</h2>
+    <div class="grid3">
+      <div class="card"><h3>a1｜原始量測</h3><div class="note">依本批實際進貨數量逐顆輸入，只代表量測先後；此時不先決定正式軸承編號。</div></div>
+      <div class="card"><h3>a2｜內徑排序</h3><div class="note">依軸承內徑 D 由小到大排序；同尺寸保留原輸入順序。</div></div>
+      <div class="card"><h3>a3｜正式編號＋配對</h3><div class="note">排序第 1 顆取得起始軸承號，每 2 顆依序配給同一支 CS 油壓缸。</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="entry" class="view">
+  <div class="panel">
+    <h2>工程規則</h2>
+    <div class="rulebar">
+      <div class="rule"><b>迴轉閥 ØF</b>軸承內徑 D + 0.015 ～ + 0.020</div>
+      <div class="rule"><b>迴轉閥 ØF1</b>以軸承1的 ØF 實測值為基準：−0.030 ～ −0.020</div>
+      <div class="rule"><b>套筒 ØB</b>軸承外徑 E − 0.020 ～ − 0.010</div>
+      <div class="rule"><b>套筒 ØC／間隙</b>ØC = ØF1 + 0.080 ～ + 0.085；間隙 = ØC實測值 − ØF1實測值</div>
+    </div>
+    <div class="note">紅字／紅框表示超出允收範圍；套筒研磨完成後會自動計算間隙 0.080～0.085 mm，異常實測值數值顯示紅色。資料以瀏覽器本機儲存；建議定期使用「備份／還原」匯出 JSON 備份。</div>
+  </div>
+
+  <div class="panel">
+    <div class="stepper">
+      <div class="stepchip current" data-step="1"><span class="n">1</span>軸承量測</div>
+      <div class="stepchip" data-step="2"><span class="n">2</span>自動計算規格</div>
+      <div class="stepchip" data-step="3"><span class="n">3</span>迴轉閥交貨量測</div>
+      <div class="stepchip" data-step="4"><span class="n">4</span>套筒交貨量測</div>
+    </div>
+
+    <div id="step1" class="step active">
+      <h2>Step 1｜軸承量測</h2>
+      <div class="grid2">
+        <div class="field"><label>油壓缸編號</label><input id="cylinder" placeholder="由「軸承建檔」自動建立；舊資料可手動輸入"></div>
+        <div class="field"><label>流程狀態</label><input class="readonly" value="確認兩顆已配對軸承尺寸後，自動計算規格" readonly></div>
+      </div>
+      <div class="note" style="margin-bottom:12px">新批次資料建議先從「軸承建檔」建立正式編號與油壓缸配對，再由歷史資料叫出該油壓缸進行後續量測。</div>
+      <div class="grid2">
+        <div class="card">
+          <h3>軸承 1</h3>
+          <div class="grid2">
+            <div class="field"><label>軸承編號</label><input id="b1no" class="readonly" readonly></div>
+            <div class="field"><label>購入日期</label><input id="b1date" type="date"></div>
+            <div class="field"><label>軸承內徑 D</label><input id="b1d" type="number" step="0.001"></div>
+            <div class="field"><label>軸承外徑 E</label><input id="b1e" type="number" step="0.001"></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>軸承 2</h3>
+          <div class="grid2">
+            <div class="field"><label>軸承編號</label><input id="b2no" class="readonly" readonly></div>
+            <div class="field"><label>購入日期</label><input id="b2date" type="date"></div>
+            <div class="field"><label>軸承內徑 D</label><input id="b2d" type="number" step="0.001"></div>
+            <div class="field"><label>軸承外徑 E</label><input id="b2e" type="number" step="0.001"></div>
+          </div>
+        </div>
+      </div>
+      <div class="actions"><button class="primary" onclick="goStep(2)">下一步：計算規格</button><button class="secondary" onclick="newRecord()">清空新增</button></div>
+    </div>
+
+    <div id="step2" class="step">
+      <h2>Step 2｜自動計算迴轉閥 ØF 與套筒 ØB 規格</h2>
+      <div class="grid2">
+        <div class="card"><h3>軸承 1 對應規格</h3><div id="spec1"></div></div>
+        <div class="card"><h3>軸承 2 對應規格</h3><div id="spec2"></div></div>
+      </div>
+      <div class="note" style="margin-top:12px">ØF 規格確認後，可先輸出廠商加工單；加工單只包含迴轉閥加工所需的 ØF 尺寸與追溯編號。</div>
+      <div class="actions"><button class="secondary" onclick="goStep(1)">上一步</button><button class="secondary" onclick="exportCurrentFWorkOrder()">輸出本件 ØF 加工單</button><button class="primary" onclick="goStep(3)">下一步：迴轉閥量測</button></div>
+    </div>
+
+    <div id="step3" class="step">
+      <h2>Step 3｜迴轉閥交貨後量測</h2>
+      <div class="card" style="margin-bottom:12px">
+        <h3>先選擇要量測的迴轉閥工單</h3>
+        <div class="grid2">
+          <div class="field">
+            <label>迴轉閥工單／油壓缸編號</label>
+            <select id="rotaryWorkOrderSelect" onchange="loadRotaryWorkOrderFromSelect()">
+              <option value="">請選擇要輸入的迴轉閥工單…</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>已選工單資訊</label>
+            <div id="rotaryWorkOrderInfo" class="note" style="min-height:44px;display:flex;align-items:center">尚未選擇工單</div>
+          </div>
+        </div>
+        <div class="actions" style="margin-top:8px">
+          <button type="button" class="secondary" onclick="renderRotaryWorkOrderSelect()">重新整理工單清單</button>
+        </div>
+      </div>
+      <div class="note" style="margin-bottom:12px"><b>輸入順序：</b>① 先選擇迴轉閥工單 → ② 量測並輸入兩個 ØF 實測值 → ③ 輸入 ØF1 實測值 → ④ 系統自動計算套筒 ØC 規格。超出允收範圍會立即以紅字／紅框提醒。</div>
+      <div class="field" style="max-width:360px"><label>迴轉閥製造日期</label><input id="rotaryDate" type="date"></div>
+      <div class="grid2">
+        <div class="card">
+          <h3>3-1｜輸入 ØF 實測值</h3>
+          <div class="grid2">
+            <div class="field"><label>軸承1 <span id="step3b1no" class="small"></span> 對應 ØF 實測值</label><input id="b1f" type="number" step="0.001" inputmode="decimal" placeholder="例如 200.006"></div>
+            <div class="field"><label>軸承2 <span id="step3b2no" class="small"></span> 對應 ØF 實測值</label><input id="b2f" type="number" step="0.001" inputmode="decimal" placeholder="例如 200.009"></div>
+          </div>
+          <div id="fchecks"></div>
+        </div>
+        <div class="card">
+          <h3>3-2｜輸入 ØF1 實測值</h3>
+          <div class="field"><label>ØF1 實測值</label><input id="f1" type="number" step="0.001" inputmode="decimal" placeholder="輸入後自動計算 ØC"></div>
+          <div id="f1check"></div>
+          <div style="margin-top:10px"><b>套筒 ØC 自動計算</b></div>
+          <div id="cspec"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h3>套筒研磨尺寸預覽</h3>
+        <div class="note" style="margin-bottom:8px">迴轉閥 ØF／ØF1 輸入完成後，即可產生套筒 ØB、ØC 研磨尺寸表給廠商加工。</div>
+        <div id="sleeveGrindingSpecPreview"></div>
+      </div>
+      <div id="step3State" class="statusline"><b>迴轉閥量測狀態：</b><span class="badge pending">尚未完成輸入</span></div>
+      <div class="actions"><button class="secondary" onclick="goStep(2)">上一步</button><button class="secondary" onclick="saveRecord()">儲存目前量測進度</button><button class="secondary" id="exportCurrentSleeveBtn" onclick="exportCurrentSleeveWorkOrder()">輸出本件套筒研磨尺寸表</button><button class="primary" onclick="validateStep3AndContinue()">下一步：套筒量測</button></div>
+    </div>
+
+    <div id="step4" class="step">
+      <h2>Step 4｜套筒交貨後量測</h2>
+      <div class="card" style="margin-bottom:12px">
+        <h3>先選擇要量測的套筒工單</h3>
+        <div class="grid2">
+          <div class="field">
+            <label>套筒工單／油壓缸編號</label>
+            <select id="sleeveWorkOrderSelect" onchange="loadSleeveWorkOrderFromSelect()">
+              <option value="">請選擇要輸入的套筒工單…</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>已選工單資訊</label>
+            <div id="sleeveWorkOrderInfo" class="note" style="min-height:44px;display:flex;align-items:center">尚未選擇工單</div>
+          </div>
+        </div>
+        <div class="actions" style="margin-top:8px">
+          <button type="button" class="secondary" onclick="renderSleeveWorkOrderSelect()">重新整理套筒工單清單</button>
+        </div>
+      </div>
+      <div class="note" style="margin-bottom:12px"><b>輸入順序：</b>① 先選擇套筒工單 → ② 輸入兩個 ØB 實測值 → ③ 輸入 ØC 實測值 → ④ 系統自動計算間隙並判定。異常尺寸會直接顯示紅字／紅框。</div>
+      <div class="field" style="max-width:360px"><label>套筒製造日期</label><input id="sleeveDate" type="date"></div>
+      <div class="grid2">
+        <div class="card">
+          <h3>ØB 實測值</h3>
+          <div class="grid2">
+            <div class="field"><label>軸承1 <span id="step4b1no" class="small"></span> 對應 ØB 實測值</label><input id="b1b" type="number" step="0.001" inputmode="decimal" placeholder="輸入研磨完成實測值"></div>
+            <div class="field"><label>軸承2 <span id="step4b2no" class="small"></span> 對應 ØB 實測值</label><input id="b2b" type="number" step="0.001" inputmode="decimal" placeholder="輸入研磨完成實測值"></div>
+          </div>
+          <div id="bchecks"></div>
+        </div>
+        <div class="card">
+          <h3>ØC 實測值／間隙</h3>
+          <div class="field"><label>ØC 實測值</label><input id="cActual" type="number" step="0.001" inputmode="decimal" placeholder="輸入研磨完成實測值"></div>
+          <div id="ccheck"></div>
+          <div id="gap"></div>
+        </div>
+      </div>
+      <div id="sleeveAbnormalPanel" class="abnormal-panel ok-panel">
+        <div class="abnormal-title">套筒量測異常明細</div>
+        <div id="sleeveAbnormalDetail" class="small">請輸入 ØB1、ØB2、ØC 實測值。</div>
+      </div>
+      <div class="statusline"><b>本件總判定：</b><span id="overallBadge" class="badge pending">未完成</span><span id="editHint" class="small"></span></div>
+      <div class="actions"><button class="secondary" onclick="goStep(3)">上一步</button><button class="primary" onclick="saveRecord()">儲存資料</button><button class="primary" onclick="openCurrentCylinderReport()">完整資料／列印</button><button class="secondary" onclick="newRecord()">另開新件</button></div>
+    </div>
+  </div>
+</section>
+
+<section id="history" class="view">
+  <div class="panel">
+    <h2>歷史資料</h2>
+    <div class="note" style="margin-bottom:10px">可單筆刪除，也可先勾選多筆後使用「刪除已選資料」。刪除會移除該油壓缸的完整量測紀錄；重要資料建議先匯出 JSON 備份。</div>
+    <div class="toolbar">
+      <input id="search" placeholder="搜尋油壓缸或軸承編號…" oninput="renderHistory()">
+      <select id="statusFilter" onchange="renderHistory()"><option value="">全部狀態</option><option>PASS</option><option>NG</option><option>未完成</option></select>
+      <button class="secondary" type="button" onclick="selectAllVisibleHistoryWorkOrders()">全選目前結果</button>
+      <button class="secondary" type="button" onclick="clearHistoryWorkOrderSelection()">清除選取</button>
+      <button class="danger" type="button" id="deleteSelectedHistoryBtn" onclick="deleteSelectedHistoryRecords()" disabled>刪除已選資料</button>
+      <button class="primary" type="button" id="showSelectedCylinderReportsBtn" onclick="openSelectedCylinderReports()">顯示已選完整資料</button>
+      <span class="small" id="multiReportHint">勾選 2 支以上後，按「顯示已選完整資料」或任一列「完整資料」，都會一次顯示全部已選履歷。</span>
+      <button class="primary" type="button" onclick="exportSelectedHistoryFWorkOrder()">輸出已選 ØF 加工單</button>
+      <button class="secondary" type="button" onclick="exportSelectedHistorySleeveWorkOrder()">輸出已選套筒研磨尺寸表</button>
+      <span class="note" id="historyWorkOrderSelectionHint">尚未選取工單</span>
+      <button class="secondary" onclick="exportCSV()">匯出 CSV</button>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th>工單選取</th><th>油壓缸</th><th>軸承1</th><th>軸承2</th><th>ØF1實測值</th><th>ØC實測值</th>
+          <th>ØF判定</th><th>ØF1判定</th><th>ØB判定</th><th>ØC判定</th><th>總判定</th><th>動作</th>
+        </tr></thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="analysis" class="view">
+  <div class="panel">
+    <h2>分析圖表</h2>
+    <div class="kpis" id="kpis"></div>
+    <div class="charts">
+      <div class="chartbox"><b>各油壓缸間隙</b><div class="small">ØC實測值 − ØF1實測值</div><canvas id="gapChart" width="700" height="320"></canvas></div>
+      <div class="chartbox"><b>NG 項目統計</b><div class="small">依已輸入實測值判定</div><canvas id="ngChart" width="700" height="320"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<section id="backup" class="view">
+  <div class="panel">
+    <h2>備份／還原</h2>
+    <div class="note">本介面使用瀏覽器本機儲存。若更換電腦、瀏覽器或清除瀏覽資料，請先匯出 JSON 備份。</div>
+    <div class="actions">
+      <button class="primary" onclick="exportJSON()">匯出 JSON 備份</button>
+      <label class="secondary" style="display:inline-flex;align-items:center;cursor:pointer;padding:9px 14px;border:1px solid #b8c4cf;border-radius:8px">
+        匯入 JSON 備份<input id="importFile" type="file" accept=".json,application/json" style="display:none" onchange="importJSON(event)">
+      </label>
+      <button class="danger" onclick="restorePreloaded()">還原成原始 ML2816_04 資料</button>
+    </div>
+    <div class="panel" style="margin-top:16px;background:#fbfcfd">
+      <b>目前儲存位置</b>
+      <div class="note">此 HTML 檔本身不會把資料寫回 Excel；資料保存在目前瀏覽器。可用 CSV 給 Excel 分析，或用 JSON 做完整備份／還原。</div>
+    </div>
+  </div>
+</section>
+
+<section id="fWorkOrderPreviewPanel">
+  <div class="panel">
+    <div class="toolbar no-print" style="justify-content:space-between;align-items:center">
+      <div>
+        <b id="workOrderPreviewTitle">加工單預覽</b>
+        <span class="note" id="fWorkOrderPreviewStatus" style="margin-left:8px"></span>
+      </div>
+      <div class="actions" style="margin-top:0">
+        <button class="secondary" type="button" id="compactCylinderReportBtn" style="display:none">集中比較版</button>
+        <button class="secondary" type="button" id="detailCylinderReportBtn" style="display:none">分段明細版</button>
+        <button class="primary" type="button" id="printFWorkOrderBtn">列印</button>
+        <button class="primary" type="button" id="savePdfFWorkOrderBtn">另存 PDF</button>
+        <button class="secondary" type="button" id="closeFWorkOrderBtn">關閉預覽</button>
+      </div>
+    </div>
+    <div class="preview-zoom-toolbar no-print" id="previewZoomToolbar">
+      <div class="preview-zoom-label">
+        <b>預覽縮放</b>
+        <span id="previewZoomDocType" class="preview-doc-type">目前文件</span>
+        <span class="note">只調整螢幕預覽</span>
+      </div>
+      <span class="zoom-controls" id="previewZoomControls" aria-label="預覽縮放控制">
+        <button class="secondary" type="button" id="previewZoomOutBtn" title="縮小預覽 10%">－ 縮小</button>
+        <span class="zoom-value" id="previewZoomValue" aria-live="polite">100%</span>
+        <button class="secondary" type="button" id="previewZoomInBtn" title="放大預覽 10%">＋ 放大</button>
+        <button class="secondary" type="button" id="previewZoomResetBtn" title="還原為 100%">100%</button>
+      </span>
+    </div>
+    <div id="reportZoomViewport" class="report-zoom-viewport">
+      <div id="fWorkOrderPrintArea" class="workorder-sheet"></div>
+    </div>
+    <div class="wo-hint no-print">所有列印／PDF 文件都可先放大檢查；按「列印」或「另存 PDF」後，還會再進入一個列印專用預覽（70%～220%），確認後才開啟瀏覽器系統列印畫面。實際輸出比例仍固定為 100%。</div>
+  </div>
+</section>
+</main>
+
+<div id="printStageOverlay" class="no-print" role="dialog" aria-modal="true" aria-labelledby="printStageTitle">
+  <div id="printStageBar">
+    <div class="stage-left">
+      <b id="printStageTitle">列印專用預覽</b>
+      <span id="printStageStatus">確認內容後再進入系統列印視窗</span>
+      <span class="stage-hint">整頁縮放預覽；不改表格排版，也不影響實際列印／PDF 比例</span>
+    </div>
+    <div class="stage-right">
+      <button class="secondary" type="button" id="printStageZoomOutBtn">－ 縮小</button>
+      <span id="printStageZoomValue">100%</span>
+      <button class="secondary" type="button" id="printStageZoomInBtn">＋ 放大</button>
+      <button class="secondary" type="button" id="printStageZoomResetBtn">100%</button>
+      <button class="primary" type="button" id="printStageConfirmBtn">開啟系統列印</button>
+      <button class="secondary" type="button" id="printStageCloseBtn">返回</button>
+    </div>
+  </div>
+  <div id="printStageViewport">
+    <div id="printStagePaper" class="workorder-sheet"></div>
+  </div>
+</div>
+
+<script>
+const PRELOADED = [{"cylinder": "No.322 CS", "bearings": [{"bearing_no": "No.644", "purchase_date": "2023-10-02", "inner_d": 199.988, "outer_e": 249.999, "f_actual": 200.003, "b_actual": 249.989}, {"bearing_no": "No.645", "purchase_date": "2023-10-02", "inner_d": 199.989, "outer_e": 249.997, "f_actual": 200.004, "b_actual": 249.987}], "rotary_mfg_date": "2025-08-01", "f1_actual": 199.973, "sleeve_mfg_date": "2025-09-19", "c_actual": 200.058, "source": "ML2816_04(4).xlsx"}, {"cylinder": "No.323 CS", "bearings": [{"bearing_no": "No.646", "purchase_date": "2023-10-02", "inner_d": 199.993, "outer_e": 249.992, "f_actual": 200.01, "b_actual": 249.982}, {"bearing_no": "No.647", "purchase_date": "2023-10-02", "inner_d": 199.995, "outer_e": 249.997, "f_actual": 200.01, "b_actual": 249.987}], "rotary_mfg_date": "2025-08-01", "f1_actual": 199.975, "sleeve_mfg_date": "2025-09-19", "c_actual": 200.057, "source": "ML2816_04(4).xlsx"}, {"cylinder": "No.324 CS", "bearings": [{"bearing_no": "No.648", "purchase_date": "2023-12-04", "inner_d": 199.983, "outer_e": 250, "f_actual": 199.998, "b_actual": 249.99}, {"bearing_no": "No.649", "purchase_date": "2023-12-04", "inner_d": 199.986, "outer_e": 249.991, "f_actual": 200.001, "b_actual": 249.981}], "rotary_mfg_date": "2025-08-01", "f1_actual": 199.973, "sleeve_mfg_date": "2025-09-19", "c_actual": 200.055, "source": "ML2816_04(4).xlsx"}, {"cylinder": "No.325 CS", "bearings": [{"bearing_no": "No.650", "purchase_date": "2023-12-04", "inner_d": 199.986, "outer_e": 249.992, "f_actual": 200.003, "b_actual": 249.981}, {"bearing_no": "No.651", "purchase_date": "2023-12-04", "inner_d": 199.987, "outer_e": 249.994, "f_actual": 200.004, "b_actual": 249.984}], "rotary_mfg_date": "2025-08-01", "f1_actual": 199.97, "sleeve_mfg_date": "2025-09-19", "c_actual": 200.053, "source": "ML2816_04(4).xlsx"}, {"cylinder": "No.326 CS", "bearings": [{"bearing_no": "No.652", "purchase_date": "2023-12-04", "inner_d": 199.987, "outer_e": 250.002, "f_actual": 200.002, "b_actual": 249.992}, {"bearing_no": "No.653", "purchase_date": "2023-12-04", "inner_d": 199.988, "outer_e": 249.996, "f_actual": 200.003, "b_actual": 249.986}], "rotary_mfg_date": "2025-08-01", "f1_actual": 199.97, "sleeve_mfg_date": "2025-09-19", "c_actual": 200.055, "source": "ML2816_04(4).xlsx"}, {"cylinder": "No.327 CS", "bearings": [{"bearing_no": "No.654", "purchase_date": "2023-12-04", "inner_d": 199.989, "outer_e": 249.994, "f_actual": 200.004, "b_actual": 249.983}, {"bearing_no": "No.655", "purchase_date": "2023-12-04", "inner_d": 199.991, "outer_e": 249.994, "f_actual": 200.009, "b_actual": 249.983}], "rotary_mfg_date": "2025-08-01", "f1_actual": 199.976, "sleeve_mfg_date": "2025-09-19", "c_actual": 200.058, "source": "ML2816_04(4).xlsx"}, {"cylinder": "No.328 CS", "bearings": [{"bearing_no": "No.656", "purchase_date": "2023-12-04", "inner_d": 199.988, "outer_e": 249.992, "f_actual": 200.003, "b_actual": 249.982}, {"bearing_no": "No.657", "purchase_date": "2025-05-29", "inner_d": 199.986, "outer_e": 250, "f_actual": 200.004, "b_actual": 249.99}], "rotary_mfg_date": "2025-08-01", "f1_actual": 199.973, "sleeve_mfg_date": "2025-09-19", "c_actual": 200.058, "source": "ML2816_04(4).xlsx"}];
+const KEY = "ML2816_QC_records_v1";
+let currentEdit = null;
+let currentStep = 1;
+let batchPreview = [];
+let batchCount = 8;
+let batchWorkOrderSelection = new Set();
+let historyWorkOrderSelection = new Set();
+
+const q = id => document.getElementById(id);
+const num = id => {
+  const v = q(id).value.trim();
+  return v === "" ? null : Number(v);
+};
+const fmt = v => (v===null || v===undefined || Number.isNaN(v)) ? "—" : Number(v).toFixed(3);
+const within = (v,lo,hi) => v!==null && lo!==null && hi!==null && v>=lo-1e-9 && v<=hi+1e-9;
+
+function getRecords(){
+  const raw = localStorage.getItem(KEY);
+  if(!raw){ localStorage.setItem(KEY, JSON.stringify(PRELOADED)); return structuredClone(PRELOADED); }
+  try{return JSON.parse(raw)}catch(e){return structuredClone(PRELOADED)}
+}
+function setRecords(r){ localStorage.setItem(KEY, JSON.stringify(r)); }
+function inputRecord(){
+  return {
+    cylinder:q("cylinder").value.trim(),
+    rotary_mfg_date:q("rotaryDate").value,
+    sleeve_mfg_date:q("sleeveDate").value,
+    bearings:[
+      {bearing_no:q("b1no").value.trim(),purchase_date:q("b1date").value,inner_d:num("b1d"),outer_e:num("b1e"),f_actual:num("b1f"),b_actual:num("b1b")},
+      {bearing_no:q("b2no").value.trim(),purchase_date:q("b2date").value,inner_d:num("b2d"),outer_e:num("b2e"),f_actual:num("b2f"),b_actual:num("b2b")}
+    ],
+    f1_actual:num("f1"),
+    c_actual:num("cActual"),
+    source: currentEdit===null ? "介面新增" : (getRecords()[currentEdit]?.source || "介面編輯")
+  };
+}
+function calc(r){
+  const out={bearings:[]};
+  for(const b of r.bearings){
+    const fLow=b.inner_d===null?null:b.inner_d+0.015;
+    const fHigh=b.inner_d===null?null:b.inner_d+0.020;
+    const bLow=b.outer_e===null?null:b.outer_e-0.020;
+    const bHigh=b.outer_e===null?null:b.outer_e-0.010;
+    out.bearings.push({
+      fLow,fHigh,bLow,bHigh,
+      fStatus:b.f_actual===null?"未完成":(within(b.f_actual,fLow,fHigh)?"PASS":"NG"),
+      bStatus:b.b_actual===null?"未完成":(within(b.b_actual,bLow,bHigh)?"PASS":"NG")
+    });
+  }
+  const baseF=r.bearings[0]?.f_actual ?? null;
+  out.f1Low=baseF===null?null:baseF-0.030;
+  out.f1High=baseF===null?null:baseF-0.020;
+  out.f1Status=r.f1_actual===null?"未完成":(within(r.f1_actual,out.f1Low,out.f1High)?"PASS":"NG");
+  out.cLow=r.f1_actual===null?null:r.f1_actual+0.080;
+  out.cHigh=r.f1_actual===null?null:r.f1_actual+0.085;
+  out.cStatus=r.c_actual===null?"未完成":(within(r.c_actual,out.cLow,out.cHigh)?"PASS":"NG");
+  out.gap=(r.c_actual===null || r.f1_actual===null)?null:r.c_actual-r.f1_actual;
+  out.gapLow=0.080;
+  out.gapHigh=0.085;
+  out.gapStatus=out.gap===null?"未完成":(within(out.gap,out.gapLow,out.gapHigh)?"PASS":"NG");
+  const required = [
+    ...r.bearings.flatMap(b=>[b.inner_d,b.outer_e,b.f_actual,b.b_actual]),
+    r.f1_actual,r.c_actual
+  ];
+  const statuses=[...out.bearings.map(x=>x.fStatus),out.f1Status,...out.bearings.map(x=>x.bStatus),out.cStatus];
+  out.overall = statuses.includes("NG") ? "NG" : (required.every(v=>v!==null) ? "PASS":"未完成");
+  return out;
+}
+function badge(status){
+  const cls=status==="PASS"?"ok":status==="NG"?"ng":"pending";
+  return `<span class="badge ${cls}">${status}</span>`;
+}
+function metric(label,value,status){
+  const valueCls=status==="NG"?"value ng-value":"value";
+  return `<div class="metric"><span>${label}</span><span class="${valueCls}">${value} ${status?badge(status):""}</span></div>`;
+}
+function refresh(){
+  const r=inputRecord(), c=calc(r);
+  q("spec1").innerHTML=metric("ØF 下限",fmt(c.bearings[0].fLow))+metric("ØF 上限",fmt(c.bearings[0].fHigh))+metric("ØB 下限",fmt(c.bearings[0].bLow))+metric("ØB 上限",fmt(c.bearings[0].bHigh));
+  q("spec2").innerHTML=metric("ØF 下限",fmt(c.bearings[1].fLow))+metric("ØF 上限",fmt(c.bearings[1].fHigh))+metric("ØB 下限",fmt(c.bearings[1].bLow))+metric("ØB 上限",fmt(c.bearings[1].bHigh));
+  q("fchecks").innerHTML=metric("軸承1 ØF 判定",`${fmt(r.bearings[0].f_actual)} / ${fmt(c.bearings[0].fLow)}～${fmt(c.bearings[0].fHigh)}`,c.bearings[0].fStatus)+metric("軸承2 ØF 判定",`${fmt(r.bearings[1].f_actual)} / ${fmt(c.bearings[1].fLow)}～${fmt(c.bearings[1].fHigh)}`,c.bearings[1].fStatus);
+  q("step3b1no").textContent=r.bearings[0].bearing_no?`（${r.bearings[0].bearing_no}）`:"";
+  q("step3b2no").textContent=r.bearings[1].bearing_no?`（${r.bearings[1].bearing_no}）`:"";
+  q("f1check").innerHTML=metric("ØF1 允收範圍",`${fmt(c.f1Low)} ～ ${fmt(c.f1High)}`,c.f1Status);
+  q("cspec").innerHTML=metric("ØC 下限",fmt(c.cLow))+metric("ØC 上限",fmt(c.cHigh));
+  const sleevePreview=q("sleeveGrindingSpecPreview");
+  if(sleevePreview){
+    const b1=r.bearings[0]||{}, b2=r.bearings[1]||{};
+    sleevePreview.innerHTML=
+      metric(`ØB｜${esc(b1.bearing_no||"軸承1")}`,`${fmt(c.bearings[0].bLow)} ～ ${fmt(c.bearings[0].bHigh)}`)+
+      metric(`ØB｜${esc(b2.bearing_no||"軸承2")}`,`${fmt(c.bearings[1].bLow)} ～ ${fmt(c.bearings[1].bHigh)}`)+
+      metric("ØC",`${fmt(c.cLow)} ～ ${fmt(c.cHigh)}`);
+  }
+  const sleeveReady=r.bearings.length===2 && r.bearings.every(b=>b.outer_e!==null && b.f_actual!==null) && r.f1_actual!==null;
+  const sleeveBtn=q("exportCurrentSleeveBtn");
+  if(sleeveBtn){sleeveBtn.disabled=!sleeveReady;sleeveBtn.title=sleeveReady?"":"請先完成兩個 ØF 實測值與 ØF1 實測值";}
+  q("step4b1no").textContent=r.bearings[0].bearing_no?`（${r.bearings[0].bearing_no}）`:"";
+  q("step4b2no").textContent=r.bearings[1].bearing_no?`（${r.bearings[1].bearing_no}）`:"";
+  q("bchecks").innerHTML=metric("軸承1 ØB 判定",`${fmt(r.bearings[0].b_actual)} / ${fmt(c.bearings[0].bLow)}～${fmt(c.bearings[0].bHigh)}`,c.bearings[0].bStatus)+metric("軸承2 ØB 判定",`${fmt(r.bearings[1].b_actual)} / ${fmt(c.bearings[1].bLow)}～${fmt(c.bearings[1].bHigh)}`,c.bearings[1].bStatus);
+  q("ccheck").innerHTML=metric("ØC 判定",`${fmt(r.c_actual)} / ${fmt(c.cLow)}～${fmt(c.cHigh)}`,c.cStatus);
+  q("gap").innerHTML=metric("實際間隙",`${fmt(c.gap)} / ${fmt(c.gapLow)}～${fmt(c.gapHigh)} mm`,c.gapStatus);
+  const sleeveAbnormal=[];
+  if(c.bearings[0].bStatus==="NG") sleeveAbnormal.push(`軸承1 ${esc(r.bearings[0].bearing_no||"")} ØB實測值 <span class="ng-value">${fmt(r.bearings[0].b_actual)}</span> mm（允收 ${fmt(c.bearings[0].bLow)}～${fmt(c.bearings[0].bHigh)}）`);
+  if(c.bearings[1].bStatus==="NG") sleeveAbnormal.push(`軸承2 ${esc(r.bearings[1].bearing_no||"")} ØB實測值 <span class="ng-value">${fmt(r.bearings[1].b_actual)}</span> mm（允收 ${fmt(c.bearings[1].bLow)}～${fmt(c.bearings[1].bHigh)}）`);
+  if(c.cStatus==="NG") sleeveAbnormal.push(`ØC實測值 <span class="ng-value">${fmt(r.c_actual)}</span> mm（允收 ${fmt(c.cLow)}～${fmt(c.cHigh)}）`);
+  if(c.gapStatus==="NG") sleeveAbnormal.push(`間隙 <span class="ng-value">${fmt(c.gap)}</span> mm（允收 ${fmt(c.gapLow)}～${fmt(c.gapHigh)}）`);
+  const abnormalPanel=q("sleeveAbnormalPanel"), abnormalDetail=q("sleeveAbnormalDetail");
+  const sleeveDone=[r.bearings[0].b_actual,r.bearings[1].b_actual,r.c_actual].every(v=>v!==null);
+  if(sleeveAbnormal.length){
+    abnormalPanel.classList.remove("ok-panel");
+    abnormalDetail.innerHTML=`<ul class="abnormal-list"><li>${sleeveAbnormal.join("</li><li>")}</li></ul>`;
+  }else if(sleeveDone){
+    abnormalPanel.classList.add("ok-panel");
+    abnormalDetail.innerHTML='<span style="color:var(--ok);font-weight:800">PASS｜目前無異常尺寸</span>';
+  }else{
+    abnormalPanel.classList.add("ok-panel");
+    abnormalDetail.textContent="請完成 ØB1、ØB2、ØC 實測值輸入。";
+  }
+  q("overallBadge").className="badge "+(c.overall==="PASS"?"ok":c.overall==="NG"?"ng":"pending");
+  q("overallBadge").textContent=c.overall;
+  const rotaryDone=r.bearings[0].f_actual!==null && r.bearings[1].f_actual!==null && r.f1_actual!==null;
+  const rotaryNg=[c.bearings[0].fStatus,c.bearings[1].fStatus,c.f1Status].includes("NG");
+  q("step3State").innerHTML=`<b>迴轉閥量測狀態：</b>${rotaryDone ? (rotaryNg ? badge("NG") : badge("PASS")) : '<span class="badge pending">尚未完成輸入</span>'}`;
+  updateRotaryWorkOrderInfo();
+  updateSleeveWorkOrderInfo();
+  [
+    ["b1f",c.bearings[0].fStatus],["b2f",c.bearings[1].fStatus],["f1",c.f1Status],
+    ["b1b",c.bearings[0].bStatus],["b2b",c.bearings[1].bStatus],["cActual",c.cStatus]
+  ].forEach(([id,s])=>q(id).classList.toggle("invalid",s==="NG"));
+}
+function goStep(n){
+  currentStep=n;
+  document.querySelectorAll(".step").forEach(x=>x.classList.remove("active"));
+  q("step"+n).classList.add("active");
+  document.querySelectorAll(".stepchip").forEach(x=>{
+    const s=Number(x.dataset.step); x.classList.toggle("current",s===n); x.classList.toggle("done",s<n);
+  });
+  refresh();
+  if(n===3) renderRotaryWorkOrderSelect(currentEdit);
+  if(n===4) renderSleeveWorkOrderSelect(currentEdit);
+}
+function renderRotaryWorkOrderSelect(preferredIndex){
+  const sel=q("rotaryWorkOrderSelect");
+  if(!sel) return;
+  const arr=getRecords();
+  const keep=(preferredIndex!==undefined && preferredIndex!==null) ? String(preferredIndex) : (currentEdit!==null ? String(currentEdit) : sel.value);
+  const options=['<option value="">請選擇要輸入的迴轉閥工單…</option>'];
+  arr.forEach((r,i)=>{
+    const b1=r.bearings?.[0]||{}, b2=r.bearings?.[1]||{};
+    const done=b1.f_actual!==null && b1.f_actual!==undefined && b2.f_actual!==null && b2.f_actual!==undefined && r.f1_actual!==null && r.f1_actual!==undefined;
+    const state=done ? "已量測" : "待量測";
+    options.push(`<option value="${i}">${esc(r.cylinder||"未編號")}｜${esc(b1.bearing_no||"—")} / ${esc(b2.bearing_no||"—")}｜${state}</option>`);
+  });
+  sel.innerHTML=options.join("");
+  if(keep!=="" && arr[Number(keep)]) sel.value=keep;
+  updateRotaryWorkOrderInfo();
+}
+function updateRotaryWorkOrderInfo(){
+  const info=q("rotaryWorkOrderInfo");
+  if(!info) return;
+  if(currentEdit===null){
+    const cyl=q("cylinder")?.value.trim();
+    info.innerHTML=cyl ? `<b>${esc(cyl)}</b>｜目前表單資料（尚未綁定既有工單）` : "尚未選擇工單";
+    return;
+  }
+  const r=getRecords()[currentEdit];
+  if(!r){info.textContent="尚未選擇工單";return;}
+  const c=calc(r), b1=r.bearings?.[0]||{}, b2=r.bearings?.[1]||{};
+  const st=[c.bearings?.[0]?.fStatus,c.bearings?.[1]?.fStatus,c.f1Status].includes("NG") ? "NG" : ((b1.f_actual!==null&&b2.f_actual!==null&&r.f1_actual!==null)?"PASS":"待量測");
+  info.innerHTML=`<b>${esc(r.cylinder||"")}</b>｜軸承 ${esc(b1.bearing_no||"—")} / ${esc(b2.bearing_no||"—")}｜狀態：${st}`;
+}
+function loadRotaryWorkOrderFromSelect(){
+  const sel=q("rotaryWorkOrderSelect");
+  if(!sel || sel.value===""){
+    currentEdit=null;
+    updateRotaryWorkOrderInfo();
+    return;
+  }
+  const i=Number(sel.value), r=getRecords()[i];
+  if(!r){ alert("找不到這筆迴轉閥工單，請重新整理清單。"); renderRotaryWorkOrderSelect(); return; }
+  currentEdit=i;
+  clearInputs();
+  q("cylinder").value=r.cylinder||""; q("rotaryDate").value=r.rotary_mfg_date||""; q("sleeveDate").value=r.sleeve_mfg_date||"";
+  const b1=r.bearings?.[0]||{}, b2=r.bearings?.[1]||{};
+  q("b1no").value=b1.bearing_no||"";q("b1date").value=b1.purchase_date||"";q("b1d").value=b1.inner_d??"";q("b1e").value=b1.outer_e??"";q("b1f").value=b1.f_actual??"";q("b1b").value=b1.b_actual??"";
+  q("b2no").value=b2.bearing_no||"";q("b2date").value=b2.purchase_date||"";q("b2d").value=b2.inner_d??"";q("b2e").value=b2.outer_e??"";q("b2f").value=b2.f_actual??"";q("b2b").value=b2.b_actual??"";
+  q("f1").value=r.f1_actual??"";q("cActual").value=r.c_actual??"";
+  q("editHint").textContent="正在編輯："+(r.cylinder||"");
+  renderRotaryWorkOrderSelect(i);
+  refresh();
+  q("b1f").focus();
+}
+function renderSleeveWorkOrderSelect(preferredIndex){
+  const sel=q("sleeveWorkOrderSelect");
+  if(!sel) return;
+  const arr=getRecords();
+  const keep=(preferredIndex!==undefined && preferredIndex!==null) ? String(preferredIndex) : (currentEdit!==null ? String(currentEdit) : sel.value);
+  const options=['<option value="">請選擇要輸入的套筒工單…</option>'];
+  arr.forEach((r,i)=>{
+    const b1=r.bearings?.[0]||{}, b2=r.bearings?.[1]||{};
+    const rotaryReady=b1.f_actual!==null && b1.f_actual!==undefined && b2.f_actual!==null && b2.f_actual!==undefined && r.f1_actual!==null && r.f1_actual!==undefined;
+    const sleeveDone=b1.b_actual!==null && b1.b_actual!==undefined && b2.b_actual!==null && b2.b_actual!==undefined && r.c_actual!==null && r.c_actual!==undefined;
+    const state=!rotaryReady ? "迴轉閥未完成" : (sleeveDone ? "已量測" : "待量測");
+    options.push(`<option value="${i}" ${rotaryReady?"":"disabled"}>${esc(r.cylinder||"未編號")}｜${esc(b1.bearing_no||"—")} / ${esc(b2.bearing_no||"—")}｜${state}</option>`);
+  });
+  sel.innerHTML=options.join("");
+  if(keep!=="" && arr[Number(keep)]){
+    const r=arr[Number(keep)], b1=r?.bearings?.[0]||{}, b2=r?.bearings?.[1]||{};
+    const ready=b1.f_actual!==null && b1.f_actual!==undefined && b2.f_actual!==null && b2.f_actual!==undefined && r?.f1_actual!==null && r?.f1_actual!==undefined;
+    if(ready) sel.value=keep;
+  }
+  updateSleeveWorkOrderInfo();
+}
+function updateSleeveWorkOrderInfo(){
+  const info=q("sleeveWorkOrderInfo");
+  if(!info) return;
+  if(currentEdit===null){ info.textContent="尚未選擇工單"; return; }
+  const r=getRecords()[currentEdit];
+  if(!r){ info.textContent="尚未選擇工單"; return; }
+  const c=calc(r), b1=r.bearings?.[0]||{}, b2=r.bearings?.[1]||{};
+  const rotaryReady=b1.f_actual!==null && b2.f_actual!==null && r.f1_actual!==null;
+  const sleeveDone=b1.b_actual!==null && b2.b_actual!==null && r.c_actual!==null;
+  const sleeveNg=[c.bearings?.[0]?.bStatus,c.bearings?.[1]?.bStatus,c.cStatus,c.gapStatus].includes("NG");
+  const st=!rotaryReady ? "迴轉閥未完成" : (sleeveDone ? (sleeveNg?"NG":"PASS") : "待量測");
+  info.innerHTML=`<b>${esc(r.cylinder||"")}</b>｜軸承 ${esc(b1.bearing_no||"—")} / ${esc(b2.bearing_no||"—")}｜ØC規格 ${fmt(c.cLow)}～${fmt(c.cHigh)}｜狀態：${st}`;
+}
+function loadSleeveWorkOrderFromSelect(){
+  const sel=q("sleeveWorkOrderSelect");
+  if(!sel || sel.value===""){ currentEdit=null; updateSleeveWorkOrderInfo(); return; }
+  const i=Number(sel.value), r=getRecords()[i];
+  if(!r){ alert("找不到這筆套筒工單，請重新整理清單。"); renderSleeveWorkOrderSelect(); return; }
+  const b1=r.bearings?.[0]||{}, b2=r.bearings?.[1]||{};
+  const rotaryReady=b1.f_actual!==null && b1.f_actual!==undefined && b2.f_actual!==null && b2.f_actual!==undefined && r.f1_actual!==null && r.f1_actual!==undefined;
+  if(!rotaryReady){ alert("此工單尚未完成迴轉閥 ØF／ØF1 量測，無法進行套筒量測。"); renderSleeveWorkOrderSelect(); return; }
+  currentEdit=i;
+  clearInputs();
+  q("cylinder").value=r.cylinder||""; q("rotaryDate").value=r.rotary_mfg_date||""; q("sleeveDate").value=r.sleeve_mfg_date||"";
+  q("b1no").value=b1.bearing_no||""; q("b1date").value=b1.purchase_date||""; q("b1d").value=b1.inner_d??""; q("b1e").value=b1.outer_e??""; q("b1f").value=b1.f_actual??""; q("b1b").value=b1.b_actual??"";
+  q("b2no").value=b2.bearing_no||""; q("b2date").value=b2.purchase_date||""; q("b2d").value=b2.inner_d??""; q("b2e").value=b2.outer_e??""; q("b2f").value=b2.f_actual??""; q("b2b").value=b2.b_actual??"";
+  q("f1").value=r.f1_actual??""; q("cActual").value=r.c_actual??"";
+  q("editHint").textContent="正在量測套筒："+(r.cylinder||"");
+  renderSleeveWorkOrderSelect(i);
+  renderRotaryWorkOrderSelect(i);
+  refresh();
+  q("b1b").focus();
+}
+function validateStep3AndContinue(){
+  const fields=[
+    ["b1f","請先輸入軸承1對應的 ØF 實測值。"],
+    ["b2f","請先輸入軸承2對應的 ØF 實測值。"],
+    ["f1","請輸入 ØF1 實測值。"]
+  ];
+  for(const [id,msg] of fields){
+    if(num(id)===null){
+      alert(msg);
+      q(id).focus();
+      return;
+    }
+  }
+  persistCurrentFormSilently();
+  goStep(4);
+}
+function clearInputs(){
+  ["cylinder","rotaryDate","sleeveDate","b1no","b1date","b1d","b1e","b2no","b2date","b2d","b2e","b1f","b2f","f1","b1b","b2b","cActual"].forEach(id=>q(id).value="");
+}
+function newRecord(){
+  currentEdit=null; clearInputs(); q("editHint").textContent=""; goStep(1); refresh(); renderRotaryWorkOrderSelect(); renderSleeveWorkOrderSelect();
+}
+function saveRecord(){
+  const r=inputRecord();
+  if(!r.cylinder){alert("請輸入油壓缸編號。");goStep(1);return;}
+  const arr=getRecords();
+  if(currentEdit===null){
+    const dup=arr.findIndex(x=>String(x.cylinder).toLowerCase()===r.cylinder.toLowerCase());
+    if(dup>=0 && !confirm("已有相同油壓缸編號。要以目前資料覆蓋該筆嗎？")) return;
+    if(dup>=0){arr[dup]=r;currentEdit=dup;}else{arr.push(r);currentEdit=arr.length-1;}
+  }else arr[currentEdit]=r;
+  setRecords(arr); refresh(); renderHistory(); renderAnalysis(); renderRotaryWorkOrderSelect(currentEdit); renderSleeveWorkOrderSelect(currentEdit);
+  q("editHint").textContent="已儲存："+new Date().toLocaleString();
+  alert("資料已儲存。");
+}
+function editRecord(i){
+  const r=getRecords()[i]; if(!r)return;
+  currentEdit=i; clearInputs();
+  q("cylinder").value=r.cylinder||""; q("rotaryDate").value=r.rotary_mfg_date||""; q("sleeveDate").value=r.sleeve_mfg_date||"";
+  const b1=r.bearings?.[0]||{}, b2=r.bearings?.[1]||{};
+  q("b1no").value=b1.bearing_no||"";q("b1date").value=b1.purchase_date||"";q("b1d").value=b1.inner_d??"";q("b1e").value=b1.outer_e??"";q("b1f").value=b1.f_actual??"";q("b1b").value=b1.b_actual??"";
+  q("b2no").value=b2.bearing_no||"";q("b2date").value=b2.purchase_date||"";q("b2d").value=b2.inner_d??"";q("b2e").value=b2.outer_e??"";q("b2f").value=b2.f_actual??"";q("b2b").value=b2.b_actual??"";
+  q("f1").value=r.f1_actual??"";q("cActual").value=r.c_actual??"";
+  q("editHint").textContent="正在編輯既有資料";
+  showView("entry");goStep(1);refresh();window.scrollTo({top:0,behavior:"smooth"});
+}
+function closeDeletedRecordPreview(deletedKeys){
+  const keys=deletedKeys instanceof Set ? deletedKeys : new Set(deletedKeys||[]);
+  const previewHasDeleted=(currentCylinderReportRecords||[]).some(r=>keys.has(String(r?.cylinder||"")))
+    || (currentCylinderReportRecord && keys.has(String(currentCylinderReportRecord.cylinder||"")));
+  if(previewHasDeleted){
+    try{closePrintStage();}catch(e){}
+    try{closeFWorkOrderPreview();}catch(e){}
+  }
+}
+function deleteRecord(i){
+  const arr=getRecords();
+  const target=arr[i];
+  if(!target)return;
+  const cylKey=String(target.cylinder||"");
+  const label=cylKey||`第 ${i+1} 筆資料`;
+  if(!confirm(`確定刪除「${label}」的全部量測資料？\n\n刪除內容包含軸承、迴轉閥、套筒實測值與判定資料。\n此操作無回收筒，建議重要資料先匯出 JSON 備份。`)) return;
+
+  const editingCylinder=currentEdit!==null ? String(arr[currentEdit]?.cylinder||"") : "";
+  historyWorkOrderSelection.delete(cylKey);
+  arr.splice(i,1);
+  setRecords(arr);
+
+  if(editingCylinder && editingCylinder===cylKey){
+    currentEdit=null;
+    clearInputs();
+    q("editHint").textContent="";
+    refresh();
+  }else if(editingCylinder){
+    const nextIndex=arr.findIndex(r=>String(r.cylinder||"")===editingCylinder);
+    currentEdit=nextIndex>=0?nextIndex:null;
+  }else{
+    currentEdit=null;
+  }
+
+  closeDeletedRecordPreview(new Set([cylKey]));
+  renderHistory();
+  renderAnalysis();
+  renderRotaryWorkOrderSelect(currentEdit);
+  renderSleeveWorkOrderSelect(currentEdit);
+  suggestNextNumbers();
+  alert(`已刪除「${label}」。`);
+}
+function deleteSelectedHistoryRecords(){
+  const selected=new Set(Array.from(historyWorkOrderSelection).map(String));
+  if(selected.size===0){
+    alert("請先勾選要刪除的油壓缸資料。");
+    return;
+  }
+  const arr=getRecords();
+  const targets=arr.filter(r=>selected.has(String(r.cylinder||"")));
+  if(targets.length===0){
+    historyWorkOrderSelection.clear();
+    renderHistory();
+    alert("目前選取項目已不存在，已清除選取狀態。");
+    return;
+  }
+  const names=targets.map(r=>String(r.cylinder||"未編號"));
+  const shown=names.slice(0,10).join("、");
+  const more=names.length>10?` 等共 ${names.length} 筆`:"";
+  const msg=`確定刪除已選的 ${targets.length} 筆油壓缸完整資料？\n\n${shown}${more}\n\n將一併刪除軸承、迴轉閥、套筒實測值與判定資料。\n此操作無回收筒，建議重要資料先匯出 JSON 備份。`;
+  if(!confirm(msg)) return;
+
+  const editingCylinder=currentEdit!==null ? String(arr[currentEdit]?.cylinder||"") : "";
+  const remaining=arr.filter(r=>!selected.has(String(r.cylinder||"")));
+  setRecords(remaining);
+  historyWorkOrderSelection.clear();
+
+  if(editingCylinder && selected.has(editingCylinder)){
+    currentEdit=null;
+    clearInputs();
+    q("editHint").textContent="";
+    refresh();
+  }else if(editingCylinder){
+    const nextIndex=remaining.findIndex(r=>String(r.cylinder||"")===editingCylinder);
+    currentEdit=nextIndex>=0?nextIndex:null;
+  }else{
+    currentEdit=null;
+  }
+
+  closeDeletedRecordPreview(selected);
+  renderHistory();
+  renderAnalysis();
+  renderRotaryWorkOrderSelect(currentEdit);
+  renderSleeveWorkOrderSelect(currentEdit);
+  suggestNextNumbers();
+  alert(`已刪除 ${targets.length} 筆資料。`);
+}
+function updateHistoryWorkOrderSelectionHint(){
+  const count=historyWorkOrderSelection.size;
+  const el=q("historyWorkOrderSelectionHint");
+  if(el) el.innerHTML=count ? `已選 <b>${count}</b> 支工單` : "尚未選取工單";
+  const btn=q("showSelectedCylinderReportsBtn");
+  if(btn) btn.textContent=count ? `顯示已選完整資料（${count}）` : "顯示已選完整資料";
+  const delBtn=q("deleteSelectedHistoryBtn");
+  if(delBtn){
+    delBtn.disabled=count===0;
+    delBtn.textContent=count ? `刪除已選資料（${count}）` : "刪除已選資料";
+    delBtn.title=count ? `刪除目前勾選的 ${count} 筆完整資料` : "請先勾選要刪除的資料";
+  }
+}
+function toggleHistoryWorkOrder(cylinder,checked){
+  if(checked) historyWorkOrderSelection.add(cylinder); else historyWorkOrderSelection.delete(cylinder);
+  updateHistoryWorkOrderSelectionHint();
+}
+function visibleHistoryRecords(){
+  const s=(q("search")?.value||"").trim().toLowerCase(), sf=q("statusFilter")?.value||"";
+  return getRecords().filter(r=>{
+    const c=calc(r);
+    const hay=(r.cylinder+" "+(r.bearings?.map(b=>b.bearing_no).join(" ")||"")).toLowerCase();
+    return (!s || hay.includes(s)) && (!sf || c.overall===sf);
+  });
+}
+function selectAllVisibleHistoryWorkOrders(){
+  visibleHistoryRecords().forEach(r=>historyWorkOrderSelection.add(String(r.cylinder||"")));
+  renderHistory();
+}
+function clearHistoryWorkOrderSelection(){
+  historyWorkOrderSelection.clear();
+  renderHistory();
+}
+function renderHistory(){
+  const s=(q("search")?.value||"").trim().toLowerCase(), sf=q("statusFilter")?.value||"";
+  const arr=getRecords(); let html="";
+  arr.forEach((r,i)=>{
+    const c=calc(r); const hay=(r.cylinder+" "+(r.bearings?.map(b=>b.bearing_no).join(" ")||"")).toLowerCase();
+    if(s && !hay.includes(s))return;if(sf && c.overall!==sf)return;
+    const fSum=c.bearings.map(x=>x.fStatus).includes("NG")?"NG":(c.bearings.map(x=>x.fStatus).every(x=>x==="PASS")?"PASS":"未完成");
+    const bSum=c.bearings.map(x=>x.bStatus).includes("NG")?"NG":(c.bearings.map(x=>x.bStatus).every(x=>x==="PASS")?"PASS":"未完成");
+    const cylKey=String(r.cylinder||"");
+    html+=`<tr>
+      <td><input type="checkbox" style="width:auto" class="historyWorkOrderCheck" data-cylinder="${esc(cylKey)}" ${historyWorkOrderSelection.has(cylKey)?"checked":""} aria-label="選取 ${esc(cylKey)} 工單"></td>
+      <td class="left"><b>${esc(r.cylinder)}</b></td><td>${esc(r.bearings?.[0]?.bearing_no||"")}</td><td>${esc(r.bearings?.[1]?.bearing_no||"")}</td>
+      <td>${fmt(r.f1_actual)}</td><td>${fmt(r.c_actual)}</td>
+      <td>${badge(fSum)}</td><td>${badge(c.f1Status)}</td><td>${badge(bSum)}</td><td>${badge(c.cStatus)}</td><td>${badge(c.overall)}</td>
+      <td><button class="primary" onclick="openCylinderReportByIndex(${i})">完整資料</button> <button class="secondary" onclick="editRecord(${i})">叫出／編輯</button> <button class="danger" onclick="deleteRecord(${i})">刪除</button></td>
+    </tr>`;
+  });
+  q("historyBody").innerHTML=html||`<tr><td colspan="12">沒有符合條件的資料</td></tr>`;
+  q("historyBody").querySelectorAll(".historyWorkOrderCheck").forEach(cb=>cb.addEventListener("change",()=>toggleHistoryWorkOrder(cb.dataset.cylinder,cb.checked)));
+  updateHistoryWorkOrderSelectionHint();
+}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));}
+function showView(id){
+  document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id===id));
+  document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x.dataset.view===id));
+  if(id==="history")renderHistory(); if(id==="analysis")renderAnalysis(); if(id==="bearingIntake")suggestNextNumbers();
+}
+document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.view)));
+document.querySelectorAll(".stepchip").forEach(b=>b.addEventListener("click",()=>goStep(Number(b.dataset.step))));
+document.querySelectorAll("input").forEach(x=>x.addEventListener("input",refresh));
+
+function renderAnalysis(){
+  const arr=getRecords(); const calcs=arr.map(calc);
+  const done=calcs.filter(c=>c.overall!=="未完成").length, ng=calcs.filter(c=>c.overall==="NG").length;
+  const gaps=calcs.map(c=>c.gap).filter(v=>v!==null);
+  const avgGap=gaps.length?gaps.reduce((a,b)=>a+b,0)/gaps.length:null;
+  const fng=calcs.reduce((n,c)=>n+c.bearings.filter(x=>x.fStatus==="NG").length,0);
+  const f1ng=calcs.filter(c=>c.f1Status==="NG").length;
+  const bng=calcs.reduce((n,c)=>n+c.bearings.filter(x=>x.bStatus==="NG").length,0);
+  const cng=calcs.filter(c=>c.cStatus==="NG").length;
+  q("kpis").innerHTML=[
+    ["油壓缸筆數",arr.length],["已完成",done],["NG 件數",ng],["NG率",done?((ng/done)*100).toFixed(1)+"%":"—"],["平均間隙",avgGap===null?"—":avgGap.toFixed(3)]
+  ].map(([l,v])=>`<div class="kpi"><div class="label">${l}</div><div class="num">${v}</div></div>`).join("");
+  drawBars(q("gapChart"),arr.map((r,i)=>({label:r.cylinder,value:calcs[i].gap})).filter(x=>x.value!==null),"mm");
+  drawBars(q("ngChart"),[{label:"ØF",value:fng},{label:"ØF1",value:f1ng},{label:"ØB",value:bng},{label:"ØC",value:cng}],"件");
+}
+function drawBars(canvas,data,unit){
+  const ctx=canvas.getContext("2d"), W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);ctx.font="12px Segoe UI";ctx.fillStyle="#586674";
+  if(!data.length){ctx.fillText("尚無可繪製資料",20,30);return}
+  const vals=data.map(d=>d.value), min=Math.min(0,...vals), max=Math.max(...vals);
+  const padL=58,padR=20,padT=25,padB=60, plotW=W-padL-padR,plotH=H-padT-padB;
+  const span=(max-min)||1;
+  ctx.strokeStyle="#cfd7df";ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=padT+plotH*i/4;ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(W-padR,y);ctx.stroke();const v=max-span*i/4;ctx.fillStyle="#657180";ctx.fillText(v.toFixed(unit==="mm"?3:0),5,y+4);}
+  const bw=Math.max(18,Math.min(60,plotW/data.length*.58)), step=plotW/data.length;
+  data.forEach((d,i)=>{
+    const x=padL+i*step+(step-bw)/2;
+    const y=padT+(max-d.value)/span*plotH;
+    const zeroY=padT+(max-0)/span*plotH;
+    ctx.fillStyle="#2f6f9d";ctx.fillRect(x,Math.min(y,zeroY),bw,Math.max(2,Math.abs(zeroY-y)));
+    ctx.save();ctx.translate(x+bw/2,H-padB+14);ctx.rotate(-Math.PI/5);ctx.textAlign="right";ctx.fillStyle="#46525e";ctx.fillText(d.label,0,0);ctx.restore();
+    ctx.textAlign="center";ctx.fillStyle="#1d2a36";ctx.fillText((unit==="mm"?d.value.toFixed(3):d.value)+" "+unit,x+bw/2,Math.max(14,Math.min(y,zeroY)-5));ctx.textAlign="start";
+  });
+}
+function download(name,text,type){
+  const blob=new Blob([text],{type:type||"text/plain;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+}
+function exportJSON(){download("ML2816_QC_backup_"+new Date().toISOString().slice(0,10)+".json",JSON.stringify(getRecords(),null,2),"application/json");}
+function importJSON(ev){
+  const file=ev.target.files?.[0]; if(!file)return;
+  const rd=new FileReader();rd.onload=()=>{try{const x=JSON.parse(rd.result);if(!Array.isArray(x))throw Error();if(confirm(`將以備份檔的 ${x.length} 筆資料取代目前資料，確定嗎？`)){setRecords(x);renderHistory();renderAnalysis();alert("還原完成。")}}catch(e){alert("JSON 格式不正確。")}ev.target.value="";};rd.readAsText(file);
+}
+function restorePreloaded(){if(confirm("確定以原始 ML2816_04 資料覆蓋目前所有資料？")){setRecords(structuredClone(PRELOADED));renderHistory();renderAnalysis();newRecord();alert("已還原。");}}
+function csvCell(v){const s=String(v??"");return /[",\n]/.test(s)?`"${s.replaceAll('"','""')}"`:s}
+
+function extractNo(s){
+  const m=String(s||"").match(/No\.(\d+)/i);
+  return m ? Number(m[1]) : null;
+}
+function padNo(n){ return "No."+String(Number(n)).padStart(3,"0"); }
+
+function readBatchValues(){
+  const vals=[];
+  for(let i=1;i<=batchCount;i++){
+    vals.push({d:q(`rawD${i}`)?.value||"", e:q(`rawE${i}`)?.value||""});
+  }
+  return vals;
+}
+function updateBatchQtyHint(){
+  if(q("batchQty")) q("batchQty").value=batchCount;
+  if(!q("batchQtyHint")) return;
+  const pairs=Math.floor(batchCount/2), odd=batchCount%2===1;
+  q("batchQtyHint").textContent=odd
+    ? `目前 ${batchCount} 顆＝${pairs} 組油壓缸＋1 顆待配對`
+    : `目前 ${batchCount} 顆＝${pairs} 組油壓缸`;
+}
+function renderBatchInputs(preserved){
+  const keep=Array.isArray(preserved)?preserved:[];
+  let html="";
+  for(let i=1;i<=batchCount;i++){
+    const old=keep[i-1]||{};
+    html+=`<tr>
+      <td><b>${i}</b></td>
+      <td>臨時 ${i}</td>
+      <td><input id="rawD${i}" type="number" step="0.001" placeholder="例如 199.988" style="min-width:150px" value="${esc(old.d||"")}"></td>
+      <td><input id="rawE${i}" type="number" step="0.001" placeholder="例如 249.996" style="min-width:150px" value="${esc(old.e||"")}"></td>
+      <td><button class="danger row-remove" type="button" onclick="removeSpecificBatchRow(${i})">刪除此顆</button></td>
+    </tr>`;
+  }
+  q("batchInputBody").innerHTML=html;
+  updateBatchQtyHint();
+  batchPreview=[];
+  batchWorkOrderSelection.clear();
+  updateBatchWorkOrderSelectionHint();
+  q("batchPreviewBody").innerHTML="";
+  q("batchPreviewPanel").style.display="none";
+}
+function setBatchCount(nextCount){
+  const n=Math.max(2,Math.min(200,Math.trunc(Number(nextCount)||0)));
+  if(!Number.isFinite(n) || n<2){ alert("本批軸承數量至少需要 2 顆。"); return; }
+  const keep=readBatchValues();
+  batchCount=n;
+  renderBatchInputs(keep.slice(0,n));
+}
+function applyBatchQty(){
+  const n=Number(q("batchQty").value);
+  if(!Number.isInteger(n)||n<2||n>200){ alert("請輸入 2～200 的整數數量。"); q("batchQty").value=batchCount; return; }
+  setBatchCount(n);
+}
+function addBatchRow(){
+  if(batchCount>=200){ alert("單批最多 200 顆。"); return; }
+  const keep=readBatchValues();
+  batchCount++;
+  renderBatchInputs(keep);
+  q(`rawD${batchCount}`)?.focus();
+}
+function removeBatchRow(){
+  if(batchCount<=2){ alert("至少保留 2 顆軸承。"); return; }
+  const keep=readBatchValues();
+  const last=keep[keep.length-1]||{};
+  if((last.d||last.e) && !confirm(`第 ${batchCount} 顆已有輸入值，確定移除嗎？`)) return;
+  batchCount--;
+  renderBatchInputs(keep.slice(0,batchCount));
+}
+function removeSpecificBatchRow(index){
+  if(batchCount<=2){ alert("至少保留 2 顆軸承。"); return; }
+  const keep=readBatchValues();
+  const target=keep[index-1]||{};
+  if((target.d||target.e) && !confirm(`第 ${index} 顆已有輸入值，確定刪除並重新編排後續輸入順序嗎？`)) return;
+  keep.splice(index-1,1);
+  batchCount--;
+  renderBatchInputs(keep);
+}
+function suggestNextNumbers(){
+  const arr=getRecords();
+  const bnums=arr.flatMap(r=>(r.bearings||[]).map(b=>extractNo(b.bearing_no))).filter(v=>v!==null);
+  const cnums=arr.map(r=>extractNo(r.cylinder)).filter(v=>v!==null);
+  if(q("batchBearingStart") && !q("batchBearingStart").value) q("batchBearingStart").value=(bnums.length?Math.max(...bnums)+1:1);
+  if(q("batchCylinderStart") && !q("batchCylinderStart").value) q("batchCylinderStart").value=(cnums.length?Math.max(...cnums)+1:1);
+}
+function buildBatchPreview(){
+  const purchase=q("batchPurchaseDate").value;
+  const bStart=Number(q("batchBearingStart").value);
+  const cStart=Number(q("batchCylinderStart").value);
+  if(!Number.isInteger(bStart)||bStart<1||!Number.isInteger(cStart)||cStart<1){
+    alert("請輸入正確的正式軸承起始號碼與油壓缸起始號碼。"); return;
+  }
+  const rows=[];
+  for(let i=1;i<=batchCount;i++){
+    const dVal=q(`rawD${i}`).value.trim(), eVal=q(`rawE${i}`).value.trim();
+    if(dVal==="" || eVal===""){ alert(`第 ${i} 顆軸承的內徑 D／外徑 E 尚未輸入完整。`); return; }
+    const d=Number(dVal), e=Number(eVal);
+    if(!Number.isFinite(d)||!Number.isFinite(e)){ alert(`第 ${i} 顆尺寸格式不正確。`); return; }
+    rows.push({seq:i,d,e});
+  }
+  rows.sort((a,b)=>(a.d-b.d)||(a.seq-b.seq));
+  batchPreview=rows.map((x,idx)=>({
+    ...x,
+    purchase_date:purchase,
+    bearing_no:padNo(bStart+idx),
+    fLow:x.d+0.015,
+    fHigh:x.d+0.020,
+    cylinder:idx===rows.length-1 && rows.length%2===1 ? "待配對" : padNo(cStart+Math.floor(idx/2))+" CS"
+  }));
+  const completeCylinders=[...new Set(batchPreview.map(x=>x.cylinder).filter(x=>x!=="待配對"))];
+  batchWorkOrderSelection=new Set(completeCylinders);
+  q("batchPreviewBody").innerHTML=batchPreview.map((x,idx)=>{
+    const isPairStart=idx%2===0 && x.cylinder!=="待配對";
+    const selectCell=isPairStart
+      ? `<td rowspan="2"><label style="display:flex;align-items:center;justify-content:center;gap:6px;margin:0;color:inherit"><input type="checkbox" style="width:auto" class="batchWorkOrderCheck" data-cylinder="${esc(x.cylinder)}" checked> 選取</label></td>`
+      : (x.cylinder==="待配對" ? `<td><span class="small">不可選</span></td>` : ``);
+    return `<tr>${selectCell}
+      <td>${idx+1}</td><td><b>${x.bearing_no}</b></td><td>第 ${x.seq} 顆</td>
+      <td>${fmt(x.d)}</td><td>${fmt(x.e)}</td><td><b>${fmt(x.fLow)}</b></td><td><b>${fmt(x.fHigh)}</b></td><td><b>${x.cylinder}</b></td>
+    </tr>`;
+  }).join("");
+  q("batchPreviewBody").querySelectorAll(".batchWorkOrderCheck").forEach(cb=>cb.addEventListener("change",()=>{
+    toggleBatchWorkOrder(cb.dataset.cylinder,cb.checked);
+  }));
+  updateBatchWorkOrderSelectionHint();
+  const pairs=Math.floor(batchCount/2), odd=batchCount%2===1;
+  q("batchPreviewNote").innerHTML=odd
+    ? `目前共 <b>${batchCount}</b> 顆，可配成 <b>${pairs}</b> 組油壓缸，最後 1 顆標示「待配對」。為避免遺失或錯配，請再新增 1 顆後才建立案件。`
+    : `目前共 <b>${batchCount}</b> 顆，將建立 <b>${pairs}</b> 筆「未完成」油壓缸案件。請確認排序、正式編號與配對。`;
+  q("createBatchBtn").textContent=odd ? `尚有 1 顆待配對，無法建立` : `確認並建立 ${pairs} 組油壓缸案件`;
+  q("createBatchBtn").disabled=odd;
+  if(q("exportBatchFBtn")){
+    q("exportBatchFBtn").disabled=false;
+    q("exportBatchFBtn").title="將目前勾選的工單合併成一張 ØF 加工尺寸表；未勾選時會顯示提示";
+  }
+  q("batchPreviewPanel").style.display="block";
+  q("batchPreviewPanel").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function updateBatchWorkOrderSelectionHint(){
+  const el=q("batchWorkOrderSelectionHint");
+  if(el) el.innerHTML=batchWorkOrderSelection.size ? `已選 <b>${batchWorkOrderSelection.size}</b> 支工單，輸出時會合併成一張表格。` : "尚未選取工單";
+  const btn=q("exportBatchFBtn");
+  if(btn){
+    btn.disabled=false;
+    btn.textContent=batchWorkOrderSelection.size ? `輸出已選 ØF 加工單（${batchWorkOrderSelection.size}）` : "輸出已選 ØF 加工單";
+  }
+}
+function toggleBatchWorkOrder(cylinder,checked){
+  if(checked) batchWorkOrderSelection.add(cylinder); else batchWorkOrderSelection.delete(cylinder);
+  q("batchPreviewBody")?.querySelectorAll(".batchWorkOrderCheck").forEach(cb=>{if(cb.dataset.cylinder===cylinder) cb.checked=checked;});
+  updateBatchWorkOrderSelectionHint();
+}
+function selectAllBatchWorkOrders(){
+  batchWorkOrderSelection=new Set(batchPreview.map(x=>x.cylinder).filter(x=>x && x!=="待配對"));
+  q("batchPreviewBody")?.querySelectorAll(".batchWorkOrderCheck").forEach(cb=>cb.checked=true);
+  updateBatchWorkOrderSelectionHint();
+}
+function clearBatchWorkOrderSelection(){
+  batchWorkOrderSelection.clear();
+  q("batchPreviewBody")?.querySelectorAll(".batchWorkOrderCheck").forEach(cb=>cb.checked=false);
+  updateBatchWorkOrderSelectionHint();
+}
+function clearBatch(){
+  q("batchPurchaseDate").value="";
+  const keep=[];
+  batchCount=8;
+  q("batchQty").value=8;
+  renderBatchInputs(keep);
+  batchPreview=[];
+  batchWorkOrderSelection.clear();
+  updateBatchWorkOrderSelectionHint();
+  q("batchPreviewBody").innerHTML="";
+  q("batchPreviewPanel").style.display="none";
+}
+function createBatchRecords(){
+  if(batchPreview.length!==batchCount || batchPreview.length<2){ alert("請先完成排序與正式編號預覽。"); return; }
+  if(batchCount%2!==0){ alert("目前軸承數量為奇數，最後 1 顆尚未配對。請先新增 1 顆後再建立案件。"); return; }
+  const arr=getRecords();
+  const newBearingNos=new Set(batchPreview.map(x=>x.bearing_no.toLowerCase()));
+  const newCylinders=[...new Set(batchPreview.map(x=>x.cylinder).filter(x=>x!=="待配對"))];
+  const existingBearingNos=new Set(arr.flatMap(r=>(r.bearings||[]).map(b=>String(b.bearing_no||"").toLowerCase())));
+  const existingCylinders=new Set(arr.map(r=>String(r.cylinder||"").toLowerCase()));
+  const dupBearing=[...newBearingNos].find(x=>existingBearingNos.has(x));
+  const dupCylinder=newCylinders.find(x=>existingCylinders.has(x.toLowerCase()));
+  if(dupBearing||dupCylinder){
+    alert("正式編號與既有資料重複。請調整起始軸承號或油壓缸號後重新產生。"); return;
+  }
+  const groupCount=batchCount/2;
+  for(let g=0;g<groupCount;g++){
+    const pair=batchPreview.slice(g*2,g*2+2);
+    arr.push({
+      cylinder:pair[0].cylinder,
+      rotary_mfg_date:"",
+      sleeve_mfg_date:"",
+      bearings:pair.map(x=>({
+        bearing_no:x.bearing_no,
+        purchase_date:x.purchase_date,
+        inner_d:x.d,
+        outer_e:x.e,
+        f_actual:null,
+        b_actual:null
+      })),
+      f1_actual:null,
+      c_actual:null,
+      source:"軸承批次建檔"
+    });
+  }
+  setRecords(arr); renderHistory(); renderAnalysis();
+  currentEdit=null; clearInputs();
+  alert(`已建立 ${groupCount} 組油壓缸案件。接下來可直接在 Step 3 的「迴轉閥工單／油壓缸編號」下拉選單選擇要量測的工單。`);
+  showView("entry"); goStep(3); renderRotaryWorkOrderSelect();
+}
+
+
+function workOrderDateText(){
+  const d=new Date();
+  const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");
+  return `${y}/${m}/${day}`;
+}
+function safeText(v){
+  return String(v??"").replace(/[&<>\"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;","'":"&#39;"}[ch]));
+}
+function buildFWorkOrderMarkup(groups, titleSuffix){
+  const rows=[];
+  groups.forEach((g,gi)=>{
+    const bearings=g.bearings||[];
+    bearings.forEach((b,bi)=>{
+      const d=Number(b.inner_d), low=Number.isFinite(d)?d+0.015:null, high=Number.isFinite(d)?d+0.020:null;
+      const pairCells=bi===0 ? `<td rowspan="${bearings.length}">${gi+1}</td><td rowspan="${bearings.length}"><b>${safeText(g.cylinder)}</b></td>` : "";
+      rows.push(`<tr>
+        ${pairCells}
+        <td>${bi+1}</td>
+        <td>${safeText(b.bearing_no)}</td>
+        <td>${safeText(b.purchase_date||"—")}</td>
+        <td>${Number.isFinite(d)?d.toFixed(3):"—"}</td>
+        <td>${low===null?"—":low.toFixed(3)}</td>
+        <td>${high===null?"—":high.toFixed(3)}</td>
+        <td><b>${low===null||high===null?"—":`Ø${low.toFixed(3)} ～ Ø${high.toFixed(3)}`}</b></td>
+      </tr>`);
+    });
+  });
+  const selectedCount=groups.length;
+  const fileDate=new Date();
+  const y=fileDate.getFullYear(),m=String(fileDate.getMonth()+1).padStart(2,"0"),day=String(fileDate.getDate()).padStart(2,"0");
+  const docTitle=`ML2816_ØF加工單_${y}${m}${day}_${selectedCount}件`;
+  return {
+    docTitle,
+    selectedCount,
+    html:`
+      <div class="wo-title">ML2816 迴轉閥 ØF 加工尺寸通知單</div>
+      <div class="wo-sub">${safeText(titleSuffix||"")}</div>
+      <div class="wo-meta">
+        <div><b>出單日期：</b>${workOrderDateText()}</div>
+        <div><b>選取工單數：</b>${selectedCount} 支</div>
+        <div><b>加工項目：</b>迴轉閥 ØF</div>
+        <div><b>尺寸單位：</b>mm</div>
+      </div>
+      <div class="tablewrap" style="border:0;border-radius:0">
+        <table class="wo-table">
+          <thead><tr><th>工單項次</th><th>油壓缸編號</th><th>端別</th><th>軸承編號</th><th>軸承購入日期</th><th>軸承內徑 D</th><th>ØF 下限</th><th>ØF 上限</th><th>廠商加工範圍</th></tr></thead>
+          <tbody>${rows.join("")}</tbody>
+        </table>
+      </div>
+      <div class="wo-spec"><b>加工規則：</b>迴轉閥 ØF = 對應軸承內徑 D + 0.015 ～ + 0.020。請依上表範圍加工；加工完成後請保留實測值尺寸，以供交貨驗收與後續 ØF1／套筒尺寸計算。</div>
+      <div class="wo-sign"><div>製表：</div><div>覆核：</div><div>廠商確認：</div></div>`
+  };
+}
+let currentWorkOrderDocTitle="";
+let workOrderOldTitle="";
+let currentCylinderReportRecord=null;
+let currentCylinderReportRecords=[];
+let currentCylinderReportMode="compact";
+let previewZoom=1;
+let previewZoomBeforePrint=null;
+const PREVIEW_ZOOM_MIN=0.70;
+const PREVIEW_ZOOM_MAX=1.60;
+const PREVIEW_ZOOM_STEP=0.10;
+let printStageMode="print";
+let printStageZoom=1;
+const PRINT_STAGE_ZOOM_MIN=0.70;
+const PRINT_STAGE_ZOOM_MAX=2.20;
+const PRINT_STAGE_ZOOM_STEP=0.10;
+function setPrintStageZoom(value){
+  const v=Math.min(PRINT_STAGE_ZOOM_MAX,Math.max(PRINT_STAGE_ZOOM_MIN,Math.round(Number(value)*10)/10));
+  printStageZoom=Number.isFinite(v)?v:1;
+  const paper=q("printStagePaper");
+  if(paper) paper.style.zoom=String(printStageZoom);
+  const label=q("printStageZoomValue");
+  if(label) label.textContent=`${Math.round(printStageZoom*100)}%`;
+  const outBtn=q("printStageZoomOutBtn"),inBtn=q("printStageZoomInBtn");
+  if(outBtn) outBtn.disabled=printStageZoom<=PRINT_STAGE_ZOOM_MIN+1e-9;
+  if(inBtn) inBtn.disabled=printStageZoom>=PRINT_STAGE_ZOOM_MAX-1e-9;
+}
+function changePrintStageZoom(delta){setPrintStageZoom(printStageZoom+delta);}
+function sizePrintStagePaper(){
+  const src=q("fWorkOrderPrintArea"), paper=q("printStagePaper");
+  if(!src||!paper) return;
+  if(src.classList.contains("cylinder-compact")) paper.style.width="1120px";
+  else if(src.classList.contains("sleeve-print")) paper.style.width="1000px";
+  else paper.style.width="940px";
+}
+function openPrintStage(mode){
+  const src=q("fWorkOrderPrintArea");
+  if(!src||!src.innerHTML.trim()){alert("目前沒有可預覽的列印內容。");return;}
+  printStageMode=mode==="pdf"?"pdf":"print";
+  const paper=q("printStagePaper");
+  paper.className=src.className+" print-stage-document";
+  paper.id="printStagePaper";
+  paper.innerHTML=src.innerHTML;
+  sizePrintStagePaper();
+  setPrintStageZoom(1);
+  q("printStageTitle").textContent=printStageMode==="pdf"?"PDF 儲存前預覽":"列印前預覽";
+  q("printStageStatus").textContent=printStageMode==="pdf"?"可先放大確認內容；確認後再進入『另存新檔為 PDF』畫面":"可先放大確認內容；確認後再進入瀏覽器系統列印畫面";
+  q("printStageConfirmBtn").textContent=printStageMode==="pdf"?"進入另存 PDF":"開啟系統列印";
+  q("printStageOverlay").classList.add("open");
+  q("printStageViewport").scrollTop=0; q("printStageViewport").scrollLeft=0;
+}
+function closePrintStage(){q("printStageOverlay").classList.remove("open");}
+function confirmPrintStage(){
+  if(!prepareFWorkOrderPrint()) return;
+  if(printStageMode==="pdf"){
+    const status=q("fWorkOrderPreviewStatus");
+    if(status) status.textContent="PDF 儲存模式：請在列印視窗的目的地選擇『另存新檔為 PDF』";
+  }
+  try{window.print();}catch(e){cleanupWorkOrderPrint();alert((printStageMode==="pdf"?"無法開啟 PDF 儲存視窗：":"無法開啟列印視窗：")+(e&&e.message?e.message:"未知錯誤"));}
+}
+function setPreviewZoom(value){
+  const v=Math.min(PREVIEW_ZOOM_MAX,Math.max(PREVIEW_ZOOM_MIN,Math.round(Number(value)*10)/10));
+  previewZoom=Number.isFinite(v)?v:1;
+  const area=q("fWorkOrderPrintArea");
+  if(area) area.style.zoom=String(previewZoom);
+  const label=q("previewZoomValue");
+  if(label) label.textContent=`${Math.round(previewZoom*100)}%`;
+  const outBtn=q("previewZoomOutBtn"), inBtn=q("previewZoomInBtn");
+  if(outBtn) outBtn.disabled=previewZoom<=PREVIEW_ZOOM_MIN+1e-9;
+  if(inBtn) inBtn.disabled=previewZoom>=PREVIEW_ZOOM_MAX-1e-9;
+}
+function changePreviewZoom(delta){setPreviewZoom(previewZoom+delta);}
+function resetPreviewZoom(){setPreviewZoom(1);}
+function preparePreviewZoom(docType,{reset=true}={}){
+  const typeLabel=q("previewZoomDocType");
+  if(typeLabel) typeLabel.textContent=docType||"目前文件";
+  if(reset) resetPreviewZoom(); else setPreviewZoom(previewZoom);
+}
+function openFWorkOrder(groups,titleSuffix){
+  if(!Array.isArray(groups)||!groups.length){alert("目前沒有可輸出的 ØF 加工資料。請先勾選至少 1 支工單。");return;}
+  const invalid=groups.some(g=>(g.bearings||[]).length!==2 || (g.bearings||[]).some(b=>!Number.isFinite(Number(b.inner_d))));
+  if(invalid){alert("加工單資料不完整：每支油壓缸必須有 2 顆已輸入內徑 D 的軸承。");return;}
+  try{
+    const result=buildFWorkOrderMarkup(groups,titleSuffix);
+    currentWorkOrderDocTitle=result.docTitle;
+    q("workOrderPreviewTitle").textContent="ØF 加工單預覽";
+    preparePreviewZoom("ØF 加工單");
+    q("fWorkOrderPrintArea").classList.remove("sleeve-print","cylinder-report","cylinder-compact");
+    setCylinderReportModeButtons(false);
+    q("fWorkOrderPrintArea").innerHTML=result.html;
+    q("fWorkOrderPreviewStatus").textContent=`已整理 ${result.selectedCount} 支工單，共 ${result.selectedCount*2} 筆 ØF 加工尺寸`;
+    q("fWorkOrderPreviewPanel").style.display="block";
+    q("fWorkOrderPreviewPanel").scrollIntoView({behavior:"smooth",block:"start"});
+  }catch(e){
+    console.error(e);
+    alert("ØF 加工單產生失敗："+(e&&e.message?e.message:"未知錯誤"));
+  }
+}
+function closeFWorkOrderPreview(){
+  q("fWorkOrderPreviewPanel").style.display="none";
+  setCylinderReportModeButtons(false);
+  currentCylinderReportRecord=null;
+  currentCylinderReportRecords=[];
+  resetPreviewZoom();
+}
+function cleanupWorkOrderPrint(){
+  document.body.classList.remove("print-workorder");
+  if(workOrderOldTitle){document.title=workOrderOldTitle;workOrderOldTitle="";}
+  if(previewZoomBeforePrint!==null){
+    const restore=previewZoomBeforePrint;
+    previewZoomBeforePrint=null;
+    setPreviewZoom(restore);
+  }
+}
+function prepareFWorkOrderPrint(){
+  if(!q("fWorkOrderPrintArea").innerHTML.trim()){alert("目前沒有加工單內容可輸出。");return false;}
+  workOrderOldTitle=document.title;
+  if(currentWorkOrderDocTitle) document.title=currentWorkOrderDocTitle;
+  previewZoomBeforePrint=previewZoom;
+  setPreviewZoom(1);
+  document.body.classList.add("print-workorder");
+  return true;
+}
+function printFWorkOrder(){openPrintStage("print");}
+function saveFWorkOrderPDF(){openPrintStage("pdf");}
+function exportCurrentFWorkOrder(){
+  const r=inputRecord();
+  if(!r.cylinder){alert("請先選擇或輸入油壓缸編號。");goStep(1);return;}
+  if(r.bearings.some(b=>b.inner_d===null || !b.bearing_no)){alert("軸承編號或內徑 D 尚未完整，無法輸出加工單。");goStep(1);return;}
+  openFWorkOrder([{cylinder:r.cylinder,bearings:r.bearings}],`單支加工單｜${r.cylinder}`);
+}
+function exportSelectedBatchFWorkOrder(){
+  if(!Array.isArray(batchPreview)||batchPreview.length<2){alert("請先完成排序與正式編號預覽。");return;}
+  if(batchWorkOrderSelection.size===0){alert("尚未選取工單。請先勾選至少 1 支油壓缸，再按『輸出已選 ØF 加工單』。");return;}
+  const groups=[];
+  const cylinders=[...new Set(batchPreview.map(x=>x.cylinder).filter(x=>x!=="待配對"))];
+  cylinders.forEach(cyl=>{
+    if(!batchWorkOrderSelection.has(cyl)) return;
+    const pair=batchPreview.filter(x=>x.cylinder===cyl);
+    if(pair.length===2) groups.push({cylinder:cyl,bearings:pair.map(x=>({bearing_no:x.bearing_no,purchase_date:x.purchase_date,inner_d:x.d}))});
+  });
+  if(!groups.length){alert("已勾選的工單沒有完整的兩顆軸承資料，請重新確認選取項目。");return;}
+  openFWorkOrder(groups,`複選加工單｜共 ${groups.length} 支迴轉閥`);
+}
+function exportBatchFWorkOrder(){ exportSelectedBatchFWorkOrder(); }
+function exportSelectedHistoryFWorkOrder(){
+  if(historyWorkOrderSelection.size===0){alert("請先在歷史資料勾選至少 1 支工單。");return;}
+  const groups=getRecords().filter(r=>historyWorkOrderSelection.has(String(r.cylinder||""))).map(r=>({cylinder:r.cylinder,bearings:r.bearings||[]}));
+  if(!groups.length){alert("找不到已選取的工單資料。");return;}
+  openFWorkOrder(groups,`歷史複選加工單｜共 ${groups.length} 支迴轉閥`);
+}
+
+
+function sleeveRecordReady(r){
+  if(!r || !r.cylinder || !Array.isArray(r.bearings) || r.bearings.length!==2) return false;
+  if(r.f1_actual===null || r.f1_actual===undefined || r.f1_actual==="" || !Number.isFinite(Number(r.f1_actual))) return false;
+  return r.bearings.every(b=>
+    b && b.bearing_no &&
+    b.outer_e!==null && b.outer_e!==undefined && b.outer_e!=="" && Number.isFinite(Number(b.outer_e)) &&
+    b.f_actual!==null && b.f_actual!==undefined && b.f_actual!=="" && Number.isFinite(Number(b.f_actual))
+  );
+}
+function persistCurrentFormSilently(){
+  const r=inputRecord();
+  if(!r.cylinder) return false;
+  const arr=getRecords();
+  let idx=currentEdit;
+  if(idx===null || !arr[idx] || String(arr[idx].cylinder||"").toLowerCase()!==String(r.cylinder||"").toLowerCase()){
+    idx=arr.findIndex(x=>String(x.cylinder||"").toLowerCase()===String(r.cylinder||"").toLowerCase());
+  }
+  if(idx>=0){arr[idx]=r;currentEdit=idx;}
+  else{arr.push(r);currentEdit=arr.length-1;}
+  setRecords(arr);
+  renderHistory();renderAnalysis();renderRotaryWorkOrderSelect(currentEdit);renderSleeveWorkOrderSelect(currentEdit);
+  q("editHint").textContent="已儲存："+new Date().toLocaleString();
+  return true;
+}
+function buildSleeveWorkOrderMarkup(groups,titleSuffix){
+  const rows=[];
+  groups.forEach((r,gi)=>{
+    const c=calc(r), bearings=r.bearings||[];
+    bearings.forEach((b,bi)=>{
+      const e=Number(b.outer_e), bLow=Number.isFinite(e)?e-0.020:null, bHigh=Number.isFinite(e)?e-0.010:null;
+      const common=bi===0 ? `
+        <td rowspan="2">${gi+1}</td>
+        <td rowspan="2"><b>${safeText(r.cylinder)}</b></td>` : "";
+      const cCommon=bi===0 ? `
+        <td rowspan="2">${Number(r.f1_actual).toFixed(3)}</td>
+        <td rowspan="2"><b>${c.cLow===null||c.cHigh===null?"—":`Ø${c.cLow.toFixed(3)} ～ Ø${c.cHigh.toFixed(3)}`}</b></td>` : "";
+      rows.push(`<tr>
+        ${common}
+        <td>${bi+1}</td>
+        <td>${safeText(b.bearing_no)}</td>
+        <td>${Number.isFinite(e)?e.toFixed(3):"—"}</td>
+        <td><b>${bLow===null||bHigh===null?"—":`Ø${bLow.toFixed(3)} ～ Ø${bHigh.toFixed(3)}`}</b></td>
+        ${cCommon}
+      </tr>`);
+    });
+  });
+  const selectedCount=groups.length;
+  const fileDate=new Date();
+  const y=fileDate.getFullYear(),m=String(fileDate.getMonth()+1).padStart(2,"0"),day=String(fileDate.getDate()).padStart(2,"0");
+  const docTitle=`ML2816_套筒研磨尺寸表_${y}${m}${day}_${selectedCount}件`;
+  return {
+    docTitle,selectedCount,
+    html:`
+      <div class="wo-title">ML2816 套筒 ØB／ØC 研磨尺寸表</div>
+      <div class="wo-sub">${safeText(titleSuffix||"")}</div>
+      <div class="wo-meta">
+        <div><b>出單日期：</b>${workOrderDateText()}</div>
+        <div><b>選取工單數：</b>${selectedCount} 支</div>
+        <div><b>加工項目：</b>套筒 ØB／ØC 研磨</div>
+        <div><b>尺寸單位：</b>mm</div>
+      </div>
+      <div class="tablewrap" style="border:0;border-radius:0;overflow:visible">
+        <table class="wo-table sleeve-compact-table" style="min-width:0;width:100%;table-layout:fixed">
+          <thead><tr>
+            <th>工單</th><th>油壓缸編號</th><th>端別</th><th>軸承編號</th>
+            <th>軸承外徑 E</th><th>ØB 研磨尺寸</th><th>ØF1 實測值</th><th>ØC 研磨尺寸</th>
+          </tr></thead>
+          <tbody>${rows.join("")}</tbody>
+        </table>
+      </div>
+      <div class="wo-spec"><b>研磨規則：</b>ØB = 對應軸承外徑 E − 0.020 ～ − 0.010；ØC = 該支迴轉閥 ØF1 實測值 + 0.080 ～ + 0.085。表內「研磨尺寸」已直接列出完整下限～上限，供廠商加工。</div>
+      <div class="wo-sign"><div>製表：</div><div>覆核：</div><div>廠商確認：</div></div>`
+  };
+}
+function openSleeveWorkOrder(groups,titleSuffix){
+  if(!Array.isArray(groups)||!groups.length){alert("目前沒有可輸出的套筒研磨資料。");return;}
+  const invalid=groups.filter(r=>!sleeveRecordReady(r));
+  if(invalid.length){
+    alert("下列工單尚未完成迴轉閥量測或資料不完整，無法產生 ØB／ØC 研磨尺寸：\n"+invalid.map(r=>r.cylinder||"未命名工單").join("、"));
+    return;
+  }
+  try{
+    const result=buildSleeveWorkOrderMarkup(groups,titleSuffix);
+    currentWorkOrderDocTitle=result.docTitle;
+    q("workOrderPreviewTitle").textContent="套筒研磨尺寸表預覽";
+    preparePreviewZoom("套筒研磨尺寸表");
+    q("fWorkOrderPrintArea").classList.remove("cylinder-report","cylinder-compact");
+    setCylinderReportModeButtons(false);
+    q("fWorkOrderPrintArea").classList.add("sleeve-print");
+    q("fWorkOrderPrintArea").innerHTML=result.html;
+    q("fWorkOrderPreviewStatus").textContent=`已整理 ${result.selectedCount} 支工單，共 ${result.selectedCount*2} 組 ØB 與 ${result.selectedCount} 組 ØC 研磨尺寸`;
+    q("fWorkOrderPreviewPanel").style.display="block";
+    q("fWorkOrderPreviewPanel").scrollIntoView({behavior:"smooth",block:"start"});
+  }catch(e){
+    console.error(e);
+    alert("套筒研磨尺寸表產生失敗："+(e&&e.message?e.message:"未知錯誤"));
+  }
+}
+function exportCurrentSleeveWorkOrder(){
+  const r=inputRecord();
+  if(!r.cylinder){alert("請先選擇迴轉閥工單。");goStep(3);return;}
+  if(!sleeveRecordReady(r)){
+    alert("請先完成本件兩個 ØF 實測值與 ØF1 實測值，再輸出套筒 ØB／ØC 研磨尺寸表。");
+    goStep(3);return;
+  }
+  persistCurrentFormSilently();
+  const saved=currentEdit!==null ? getRecords()[currentEdit] : r;
+  openSleeveWorkOrder([saved||r],`單支研磨尺寸表｜${r.cylinder}`);
+}
+function exportSelectedHistorySleeveWorkOrder(){
+  if(historyWorkOrderSelection.size===0){alert("請先在歷史資料勾選至少 1 支工單。");return;}
+  const groups=getRecords().filter(r=>historyWorkOrderSelection.has(String(r.cylinder||"")));
+  if(!groups.length){alert("找不到已選取的工單資料。");return;}
+  const invalid=groups.filter(r=>!sleeveRecordReady(r));
+  if(invalid.length){
+    alert("已選工單中有尚未完成迴轉閥量測的資料：\n"+invalid.map(r=>r.cylinder||"未命名工單").join("、")+"\n\n請完成兩個 ØF 實測值與 ØF1 實測值後再輸出。");
+    return;
+  }
+  openSleeveWorkOrder(groups,`複選研磨尺寸表｜共 ${groups.length} 支套筒`);
+}
+
+
+function reportValue(v,status,prefix=""){
+  const val=fmt(v);
+  const cls=status==="NG"?"report-ng":"";
+  return `<span class="${cls}">${prefix}${val}</span>`;
+}
+function reportStatus(status){
+  const cls=status==="NG"?"report-ng":"report-pass";
+  return `<span class="${cls}">${safeText(status||"未完成")}</span>`;
+}
+function reportRange(lo,hi,prefix="Ø"){
+  if(lo===null||lo===undefined||hi===null||hi===undefined) return "—";
+  return `${prefix}${fmt(lo)} ～ ${prefix}${fmt(hi)}`;
+}
+function buildCylinderReportMarkup(r){
+  const c=calc(r), b1=r.bearings?.[0]||{}, b2=r.bearings?.[1]||{};
+  const bearings=[b1,b2];
+  const fRows=bearings.map((b,i)=>`<tr>
+    <td>${i+1}</td><td><b>${safeText(b.bearing_no||"—")}</b></td>
+    <td>${reportRange(c.bearings[i].fLow,c.bearings[i].fHigh,"")}</td>
+    <td>${reportValue(b.f_actual,c.bearings[i].fStatus)}</td>
+    <td>${reportStatus(c.bearings[i].fStatus)}</td>
+  </tr>`).join("");
+  const bRows=bearings.map((b,i)=>`<tr>
+    <td>${i+1}</td><td><b>${safeText(b.bearing_no||"—")}</b></td>
+    <td>${reportRange(c.bearings[i].bLow,c.bearings[i].bHigh,"")}</td>
+    <td>${reportValue(b.b_actual,c.bearings[i].bStatus)}</td>
+    <td>${reportStatus(c.bearings[i].bStatus)}</td>
+  </tr>`).join("");
+  const abnormal=[];
+  bearings.forEach((b,i)=>{
+    if(c.bearings[i].fStatus==="NG") abnormal.push(`軸承${i+1} ${safeText(b.bearing_no||"")} ØF實測值 <span class="report-ng">Ø${fmt(b.f_actual)}</span>（規格 ${reportRange(c.bearings[i].fLow,c.bearings[i].fHigh,"")}）`);
+    if(c.bearings[i].bStatus==="NG") abnormal.push(`軸承${i+1} ${safeText(b.bearing_no||"")} ØB實測值 <span class="report-ng">Ø${fmt(b.b_actual)}</span>（規格 ${reportRange(c.bearings[i].bLow,c.bearings[i].bHigh,"")}）`);
+  });
+  if(c.f1Status==="NG") abnormal.push(`ØF1實測值 <span class="report-ng">Ø${fmt(r.f1_actual)}</span>（規格 ${reportRange(c.f1Low,c.f1High,"")}）`);
+  if(c.cStatus==="NG") abnormal.push(`ØC實測值 <span class="report-ng">Ø${fmt(r.c_actual)}</span>（規格 ${reportRange(c.cLow,c.cHigh,"")}）`);
+  if(c.gapStatus==="NG") abnormal.push(`間隙 <span class="report-ng">${fmt(c.gap)} mm</span>（規格 ${fmt(c.gapLow)}～${fmt(c.gapHigh)} mm）`);
+  const today=new Date();
+  const y=today.getFullYear(),m=String(today.getMonth()+1).padStart(2,"0"),d=String(today.getDate()).padStart(2,"0");
+  const docTitle=`ML2816_油壓缸完整量測履歷_${String(r.cylinder||"未命名").replace(/[^0-9A-Za-z_-]+/g,"_")}_${y}${m}${d}`;
+  const overallClass=c.overall==="NG"?"report-ng":"report-pass";
+  return {docTitle,html:`
+    <div class="report-head">
+      <div><div class="report-title">ML2816 油壓缸完整量測履歷表</div><div class="report-sub">軸承 → 迴轉閥 → 套筒｜尺寸單位：mm</div></div>
+      <div class="report-result ${overallClass}">總判定：${safeText(c.overall)}</div>
+    </div>
+    <div class="report-meta">
+      <div><b>油壓缸編號：</b>${safeText(r.cylinder||"—")}</div>
+      <div><b>報表日期：</b>${workOrderDateText()}</div>
+      <div><b>迴轉閥製造日期：</b>${safeText(r.rotary_mfg_date||"—")}</div>
+      <div><b>套筒製造日期：</b>${safeText(r.sleeve_mfg_date||"—")}</div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-section-title">1｜軸承原始量測資料</div>
+      <table class="report-table"><thead><tr><th>端別</th><th>軸承編號</th><th>購入日期</th><th>內徑 D</th><th>外徑 E</th></tr></thead><tbody>
+        <tr><td>1</td><td><b>${safeText(b1.bearing_no||"—")}</b></td><td>${safeText(b1.purchase_date||"—")}</td><td>${reportValue(b1.inner_d,null)}</td><td>${reportValue(b1.outer_e,null)}</td></tr>
+        <tr><td>2</td><td><b>${safeText(b2.bearing_no||"—")}</b></td><td>${safeText(b2.purchase_date||"—")}</td><td>${reportValue(b2.inner_d,null)}</td><td>${reportValue(b2.outer_e,null)}</td></tr>
+      </tbody></table>
+    </div>
+
+    <div class="report-section">
+      <div class="report-section-title">2｜迴轉閥量測</div>
+      <table class="report-table"><thead><tr><th>端別</th><th>軸承編號</th><th>ØF 規格</th><th>ØF 實測值</th><th>判定</th></tr></thead><tbody>${fRows}</tbody></table>
+      <table class="report-table" style="margin-top:6px"><thead><tr><th>項目</th><th>規格</th><th>實測值</th><th>判定</th></tr></thead><tbody>
+        <tr><td><b>ØF1</b></td><td>${reportRange(c.f1Low,c.f1High,"")}</td><td>${reportValue(r.f1_actual,c.f1Status)}</td><td>${reportStatus(c.f1Status)}</td></tr>
+      </tbody></table>
+    </div>
+
+    <div class="report-section">
+      <div class="report-section-title">3｜套筒量測</div>
+      <table class="report-table"><thead><tr><th>端別</th><th>軸承編號</th><th>ØB 規格</th><th>ØB 實測值</th><th>判定</th></tr></thead><tbody>${bRows}</tbody></table>
+      <table class="report-table" style="margin-top:6px"><thead><tr><th>項目</th><th>規格</th><th>實測值</th><th>判定</th></tr></thead><tbody>
+        <tr><td><b>ØC</b></td><td>${reportRange(c.cLow,c.cHigh,"")}</td><td>${reportValue(r.c_actual,c.cStatus)}</td><td>${reportStatus(c.cStatus)}</td></tr>
+        <tr><td><b>間隙</b></td><td>${fmt(c.gapLow)} ～ ${fmt(c.gapHigh)} mm</td><td>${reportValue(c.gap,c.gapStatus)} mm</td><td>${reportStatus(c.gapStatus)}</td></tr>
+      </tbody></table>
+    </div>
+
+    <div class="report-summary">
+      <div><b>ØF 判定：</b>${reportStatus(c.bearings.some(x=>x.fStatus==="NG")?"NG":(c.bearings.every(x=>x.fStatus==="PASS")?"PASS":"未完成"))}</div>
+      <div><b>ØF1 判定：</b>${reportStatus(c.f1Status)}</div>
+      <div><b>ØB 判定：</b>${reportStatus(c.bearings.some(x=>x.bStatus==="NG")?"NG":(c.bearings.every(x=>x.bStatus==="PASS")?"PASS":"未完成"))}</div>
+      <div><b>ØC／間隙：</b>${reportStatus(c.cStatus==="NG"||c.gapStatus==="NG"?"NG":(c.cStatus==="PASS"&&c.gapStatus==="PASS"?"PASS":"未完成"))}</div>
+    </div>
+    <div class="report-abnormal"><b>異常尺寸：</b>${abnormal.length?`<ul style="margin:6px 0 0 20px;padding:0"><li>${abnormal.join("</li><li>")}</li></ul>`:'<span class="report-pass"> 無異常尺寸</span>'}</div>
+    <div class="report-sign"><div>量測：</div><div>覆核：</div><div>主管：</div></div>
+  `};
+}
+
+function cylinderSubStatus(status){
+  return `<span class="compact-mini-status">${reportStatus(status)}</span>`;
+}
+function cylinderOverallStatus(list){
+  return list.some(x=>x==="NG") ? "NG" : (list.every(x=>x==="PASS") ? "PASS" : "未完成");
+}
+function buildCylinderReportCompactMarkup(r){
+  const c=calc(r), b1=r.bearings?.[0]||{}, b2=r.bearings?.[1]||{};
+  const bearings=[b1,b2];
+  const fOverall=cylinderOverallStatus(c.bearings.map(x=>x.fStatus));
+  const bOverall=cylinderOverallStatus(c.bearings.map(x=>x.bStatus));
+  const abnormal=[];
+  bearings.forEach((b,i)=>{
+    if(c.bearings[i].fStatus==="NG") abnormal.push(`軸承${i+1} ${safeText(b.bearing_no||"")} ØF實測值 <span class="report-ng">Ø${fmt(b.f_actual)}</span>（規格 ${reportRange(c.bearings[i].fLow,c.bearings[i].fHigh)}）`);
+    if(c.bearings[i].bStatus==="NG") abnormal.push(`軸承${i+1} ${safeText(b.bearing_no||"")} ØB實測值 <span class="report-ng">Ø${fmt(b.b_actual)}</span>（規格 ${reportRange(c.bearings[i].bLow,c.bearings[i].bHigh)}）`);
+  });
+  if(c.f1Status==="NG") abnormal.push(`ØF1實測值 <span class="report-ng">Ø${fmt(r.f1_actual)}</span>（規格 ${reportRange(c.f1Low,c.f1High)}）`);
+  if(c.cStatus==="NG") abnormal.push(`ØC實測值 <span class="report-ng">Ø${fmt(r.c_actual)}</span>（規格 ${reportRange(c.cLow,c.cHigh,"")}）`);
+  if(c.gapStatus==="NG") abnormal.push(`間隙 <span class="report-ng">${fmt(c.gap)} mm</span>（規格 ${fmt(c.gapLow)}～${fmt(c.gapHigh)} mm）`);
+  const today=new Date();
+  const y=today.getFullYear(),m=String(today.getMonth()+1).padStart(2,"0"),d=String(today.getDate()).padStart(2,"0");
+  const docTitle=`ML2816_油壓缸完整量測履歷_集中比較版_${String(r.cylinder||"未命名").replace(/[^0-9A-Za-z_-]+/g,"_")}_${y}${m}${d}`;
+  const overallClass=c.overall==="NG"?"report-ng":"report-pass";
+  return {docTitle,html:`
+    <div class="compact-report-head">
+      <div>
+        <div class="report-title">ML2816 油壓缸完整量測履歷表 <span class="compact-tag">集中比較版・精簡欄位</span></div>
+        <div class="report-sub">依原始 ML2816 分類模式重整｜軸承 → 迴轉閥 → 套筒｜尺寸單位：mm</div>
+      </div>
+      <div class="report-result ${overallClass}">總判定：${safeText(c.overall)}</div>
+    </div>
+    <div class="compact-meta-line">
+      <span><b>油壓缸編號：</b>${safeText(r.cylinder||"—")}</span>
+      <span><b>報表日期：</b>${workOrderDateText()}</span>
+      <span><b>資料狀態：</b>${c.overall==="未完成"?"量測尚未完成":"量測完成"}</span>
+    </div>
+
+    <div class="compact-table-wrap">
+      <table class="compact-table">
+        <colgroup>
+          <col style="width:7%">
+          <col style="width:5.5%"><col style="width:6%"><col style="width:6.25%"><col style="width:6.25%">
+          <col style="width:6.5%"><col style="width:9%"><col style="width:6%"><col style="width:6.5%">
+          <col style="width:7%"><col style="width:10%"><col style="width:7%"><col style="width:10%"><col style="width:7%">
+        </colgroup>
+        <thead>
+          <tr>
+            <th rowspan="2" class="group-head grp-total">油壓缸編號</th>
+            <th colspan="4" class="group-head grp-bearing">軸　承</th>
+            <th colspan="4" class="group-head grp-rotary">迴　轉　閥</th>
+            <th colspan="5" class="group-head grp-sleeve">套　筒</th>
+          </tr>
+          <tr>
+            <th class="sub-bearing">軸承編號</th>
+            <th class="sub-bearing">購入日期</th>
+            <th class="sub-bearing">內徑 D</th>
+            <th class="sub-bearing">外徑 E</th>
+
+            <th class="sub-rotary">製造日期</th>
+            <th class="sub-rotary">ØF 規格</th>
+            <th class="sub-rotary">ØF 實測值</th>
+            <th class="sub-rotary">ØF1 實測值</th>
+
+            <th class="sub-sleeve">製造日期</th>
+            <th class="sub-sleeve">ØB 規格</th>
+            <th class="sub-sleeve">ØB 實測值</th>
+            <th class="sub-sleeve">ØC 規格</th>
+            <th class="sub-sleeve">ØC 實測值</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="2" class="shared-cell"><b>${safeText(r.cylinder||"—")}</b></td>
+            <td><b>${safeText(b1.bearing_no||"—")}</b></td>
+            <td>${safeText(b1.purchase_date||"—")}</td>
+            <td>${reportValue(b1.inner_d,null)}</td>
+            <td>${reportValue(b1.outer_e,null)}</td>
+
+            <td rowspan="2" class="shared-cell">${safeText(r.rotary_mfg_date||"—")}</td>
+            <td>${reportRange(c.bearings[0].fLow,c.bearings[0].fHigh,"")}</td>
+            <td class="actual-cell">${reportValue(b1.f_actual,c.bearings[0].fStatus)}</td>
+            <td rowspan="2" class="shared-cell actual-cell">${reportValue(r.f1_actual,c.f1Status)}</td>
+
+            <td rowspan="2" class="shared-cell">${safeText(r.sleeve_mfg_date||"—")}</td>
+            <td>${reportRange(c.bearings[0].bLow,c.bearings[0].bHigh,"")}</td>
+            <td class="actual-cell">${reportValue(b1.b_actual,c.bearings[0].bStatus)}</td>
+            <td rowspan="2" class="shared-cell">${reportRange(c.cLow,c.cHigh,"")}</td>
+            <td rowspan="2" class="shared-cell actual-cell">${reportValue(r.c_actual,c.cStatus)}</td>
+            
+          </tr>
+          <tr>
+            <td><b>${safeText(b2.bearing_no||"—")}</b></td>
+            <td>${safeText(b2.purchase_date||"—")}</td>
+            <td>${reportValue(b2.inner_d,null)}</td>
+            <td>${reportValue(b2.outer_e,null)}</td>
+
+            <td>${reportRange(c.bearings[1].fLow,c.bearings[1].fHigh,"")}</td>
+            <td class="actual-cell">${reportValue(b2.f_actual,c.bearings[1].fStatus)}</td>
+
+            <td>${reportRange(c.bearings[1].bLow,c.bearings[1].bHigh,"")}</td>
+            <td class="actual-cell">${reportValue(b2.b_actual,c.bearings[1].bStatus)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="compact-judge-grid">
+      <div><b>ØF</b><br>${reportStatus(fOverall)}</div>
+      <div><b>ØF1</b><br>${reportStatus(c.f1Status)}</div>
+      <div><b>ØB</b><br>${reportStatus(bOverall)}</div>
+      <div><b>ØC</b><br>${reportStatus(c.cStatus)}</div>
+      <div><b>間隙</b><br>${reportStatus(c.gapStatus)}</div>
+      <div><b>總判定</b><br>${reportStatus(c.overall)}</div>
+    </div>
+
+    <div class="compact-abnormal"><b>異常尺寸：</b>${abnormal.length?`<ul style="margin:5px 0 0 18px;padding:0"><li>${abnormal.join("</li><li>")}</li></ul>`:'<span class="report-pass"> 無異常尺寸</span>'}</div>
+    <div class="compact-note">規則：ØF＝軸承內徑 D +0.015～+0.020；ØF1＝對應 ØF 實測值 −0.030～−0.020；ØB＝軸承外徑 E −0.020～−0.010；ØC／間隙＝ØF1 +0.080～+0.085。</div>
+    <div class="compact-sign"><div>量測：</div><div>覆核：</div><div>主管：</div></div>
+  `};
+}
+
+function buildCylinderReportCompactMultiMarkup(records){
+  const list=(records||[]).filter(r=>r&&r.cylinder);
+  const tbody=[];
+  const summary=[];
+  const abnormalAll=[];
+  let passCount=0, ngCount=0, pendingCount=0;
+  list.forEach((r,idx)=>{
+    const c=calc(r), b1=r.bearings?.[0]||{}, b2=r.bearings?.[1]||{};
+    const fOverall=cylinderOverallStatus(c.bearings.map(x=>x.fStatus));
+    const bOverall=cylinderOverallStatus(c.bearings.map(x=>x.bStatus));
+    if(c.overall==="PASS") passCount++; else if(c.overall==="NG") ngCount++; else pendingCount++;
+    const abnormal=[];
+    [b1,b2].forEach((b,i)=>{
+      if(c.bearings[i].fStatus==="NG") abnormal.push(`軸承${i+1} ${safeText(b.bearing_no||"")} ØF實測值 <span class="report-ng">Ø${fmt(b.f_actual)}</span>（規格 ${reportRange(c.bearings[i].fLow,c.bearings[i].fHigh)}）`);
+      if(c.bearings[i].bStatus==="NG") abnormal.push(`軸承${i+1} ${safeText(b.bearing_no||"")} ØB實測值 <span class="report-ng">Ø${fmt(b.b_actual)}</span>（規格 ${reportRange(c.bearings[i].bLow,c.bearings[i].bHigh)}）`);
+    });
+    if(c.f1Status==="NG") abnormal.push(`ØF1實測值 <span class="report-ng">Ø${fmt(r.f1_actual)}</span>（規格 ${reportRange(c.f1Low,c.f1High)}）`);
+    if(c.cStatus==="NG") abnormal.push(`ØC實測值 <span class="report-ng">Ø${fmt(r.c_actual)}</span>（規格 ${reportRange(c.cLow,c.cHigh,"")}）`);
+    if(c.gapStatus==="NG") abnormal.push(`間隙 <span class="report-ng">${fmt(c.gap)} mm</span>（規格 ${fmt(c.gapLow)}～${fmt(c.gapHigh)} mm）`);
+    if(abnormal.length) abnormalAll.push(`<b>${safeText(r.cylinder)}</b>：${abnormal.join("；")}`);
+    tbody.push(`
+      <tbody class="cylinder-group">
+        <tr>
+          <td rowspan="2" class="shared-cell"><b>${safeText(r.cylinder||"—")}</b></td>
+          <td><b>${safeText(b1.bearing_no||"—")}</b></td>
+          <td>${safeText(b1.purchase_date||"—")}</td>
+          <td>${reportValue(b1.inner_d,null)}</td>
+          <td>${reportValue(b1.outer_e,null)}</td>
+          <td rowspan="2" class="shared-cell">${safeText(r.rotary_mfg_date||"—")}</td>
+          <td>${reportRange(c.bearings[0].fLow,c.bearings[0].fHigh,"")}</td>
+          <td class="actual-cell">${reportValue(b1.f_actual,c.bearings[0].fStatus)}</td>
+          <td rowspan="2" class="shared-cell actual-cell">${reportValue(r.f1_actual,c.f1Status)}</td>
+          <td rowspan="2" class="shared-cell">${safeText(r.sleeve_mfg_date||"—")}</td>
+          <td>${reportRange(c.bearings[0].bLow,c.bearings[0].bHigh,"")}</td>
+          <td class="actual-cell">${reportValue(b1.b_actual,c.bearings[0].bStatus)}</td>
+          <td rowspan="2" class="shared-cell">${reportRange(c.cLow,c.cHigh,"")}</td>
+          <td rowspan="2" class="shared-cell actual-cell">${reportValue(r.c_actual,c.cStatus)}</td>
+          
+        </tr>
+        <tr>
+          <td><b>${safeText(b2.bearing_no||"—")}</b></td>
+          <td>${safeText(b2.purchase_date||"—")}</td>
+          <td>${reportValue(b2.inner_d,null)}</td>
+          <td>${reportValue(b2.outer_e,null)}</td>
+          <td>${reportRange(c.bearings[1].fLow,c.bearings[1].fHigh,"")}</td>
+          <td class="actual-cell">${reportValue(b2.f_actual,c.bearings[1].fStatus)}</td>
+          <td>${reportRange(c.bearings[1].bLow,c.bearings[1].bHigh,"")}</td>
+          <td class="actual-cell">${reportValue(b2.b_actual,c.bearings[1].bStatus)}</td>
+        </tr>
+      </tbody>`);
+    summary.push(`<tr><td><b>${safeText(r.cylinder)}</b></td><td>${reportStatus(fOverall)}</td><td>${reportStatus(c.f1Status)}</td><td>${reportStatus(bOverall)}</td><td>${reportStatus(c.cStatus)}</td><td>${reportStatus(c.gapStatus)}</td><td>${reportStatus(c.overall)}</td></tr>`);
+  });
+  const today=new Date();
+  const y=today.getFullYear(),m=String(today.getMonth()+1).padStart(2,"0"),d=String(today.getDate()).padStart(2,"0");
+  const docTitle=`ML2816_油壓缸完整量測履歷_集中比較版_${list.length}件_${y}${m}${d}`;
+  const resultClass=ngCount?"report-ng":"report-pass";
+  return {docTitle,html:`
+    <div class="compact-report-head">
+      <div>
+        <div class="report-title">ML2816 油壓缸完整量測履歷表 <span class="compact-tag">集中比較版・多筆・精簡欄位</span></div>
+        <div class="report-sub">依原始 ML2816 分類模式集中比較｜軸承 → 迴轉閥 → 套筒｜尺寸單位：mm</div>
+      </div>
+      <div class="report-result ${resultClass}">已選 ${list.length} 支｜NG ${ngCount} 支</div>
+    </div>
+    <div class="compact-meta-line">
+      <span><b>選取油壓缸：</b>${list.map(r=>safeText(r.cylinder)).join("、")}</span>
+      <span><b>報表日期：</b>${workOrderDateText()}</span>
+      <span><b>PASS：</b>${passCount}　<b>NG：</b>${ngCount}　<b>未完成：</b>${pendingCount}</span>
+    </div>
+    <div class="compact-table-wrap">
+      <table class="compact-table">
+        <colgroup>
+          <col style="width:7%">
+          <col style="width:5.5%"><col style="width:6%"><col style="width:6.25%"><col style="width:6.25%">
+          <col style="width:6.5%"><col style="width:9%"><col style="width:6%"><col style="width:6.5%">
+          <col style="width:7%"><col style="width:10%"><col style="width:7%"><col style="width:10%"><col style="width:7%">
+        </colgroup>
+        <thead>
+          <tr>
+            <th rowspan="2" class="group-head grp-total">油壓缸編號</th>
+            <th colspan="4" class="group-head grp-bearing">軸　承</th>
+            <th colspan="4" class="group-head grp-rotary">迴　轉　閥</th>
+            <th colspan="5" class="group-head grp-sleeve">套　筒</th>
+          </tr>
+          <tr>
+            <th class="sub-bearing">軸承編號</th><th class="sub-bearing">購入日期</th><th class="sub-bearing">內徑 D</th><th class="sub-bearing">外徑 E</th>
+            <th class="sub-rotary">製造日期</th><th class="sub-rotary">ØF 規格</th><th class="sub-rotary">ØF 實測值</th><th class="sub-rotary">ØF1 實測值</th>
+            <th class="sub-sleeve">製造日期</th><th class="sub-sleeve">ØB 規格</th><th class="sub-sleeve">ØB 實測值</th><th class="sub-sleeve">ØC 規格</th><th class="sub-sleeve">ØC 實測值</th>
+          </tr>
+        </thead>
+        ${tbody.join("")}
+      </table>
+    </div>
+    <table class="multi-summary-table">
+      <thead><tr><th>油壓缸編號</th><th>ØF</th><th>ØF1</th><th>ØB</th><th>ØC</th><th>間隙</th><th>總判定</th></tr></thead>
+      <tbody>${summary.join("")}</tbody>
+    </table>
+    <div class="multi-abnormal"><b>異常尺寸彙整：</b>${abnormalAll.length?`<ul style="margin:5px 0 0 18px;padding:0"><li>${abnormalAll.join("</li><li>")}</li></ul>`:'<span class="report-pass"> 所選油壓缸無異常尺寸</span>'}</div>
+    <div class="compact-note">規則：ØF＝軸承內徑 D +0.015～+0.020；ØF1＝對應 ØF 實測值 −0.030～−0.020；ØB＝軸承外徑 E −0.020～−0.010；ØC／間隙＝ØF1 +0.080～+0.085。</div>
+    <div class="compact-sign"><div>量測：</div><div>覆核：</div><div>主管：</div></div>
+  `};
+}
+function buildCylinderReportDetailMultiMarkup(records){
+  const list=(records||[]).filter(r=>r&&r.cylinder);
+  const today=new Date();
+  const y=today.getFullYear(),m=String(today.getMonth()+1).padStart(2,"0"),d=String(today.getDate()).padStart(2,"0");
+  const docTitle=`ML2816_油壓缸完整量測履歷_分段明細版_${list.length}件_${y}${m}${d}`;
+  const html=list.map(r=>`<section class="multi-detail-item">${buildCylinderReportMarkup(r).html}</section>`).join("");
+  return {docTitle,html};
+}
+function openSelectedCylinderReports(){
+  if(historyWorkOrderSelection.size===0){alert("請先在歷史資料勾選至少 1 支油壓缸。 ");return;}
+  const records=getRecords().filter(r=>historyWorkOrderSelection.has(String(r.cylinder||"")));
+  if(!records.length){alert("找不到已選取的油壓缸資料。 ");return;}
+  try{
+    currentCylinderReportRecords=structuredClone(records);
+    currentCylinderReportRecord=currentCylinderReportRecords[0]||null;
+    renderCurrentCylinderReportMode("compact");
+    q("fWorkOrderPreviewPanel").style.display="block";
+    q("fWorkOrderPreviewPanel").scrollIntoView({behavior:"smooth",block:"start"});
+  }catch(e){
+    console.error(e);
+    alert("多筆完整量測履歷產生失敗："+(e&&e.message?e.message:"未知錯誤"));
+  }
+}
+
+function setCylinderReportModeButtons(show,mode="compact"){
+  const c=q("compactCylinderReportBtn"), d=q("detailCylinderReportBtn");
+  if(!c||!d) return;
+  c.style.display=show?"inline-block":"none";
+  d.style.display=show?"inline-block":"none";
+  c.disabled=show&&mode==="compact";
+  d.disabled=show&&mode==="detail";
+}
+function renderCurrentCylinderReportMode(mode){
+  const records=currentCylinderReportRecords.length?currentCylinderReportRecords:(currentCylinderReportRecord?[currentCylinderReportRecord]:[]);
+  if(!records.length) return;
+  currentCylinderReportMode=mode==="detail"?"detail":"compact";
+  let result;
+  if(records.length===1){
+    const r=records[0];
+    result=currentCylinderReportMode==="detail" ? buildCylinderReportMarkup(r) : buildCylinderReportCompactMarkup(r);
+  }else{
+    result=currentCylinderReportMode==="detail" ? buildCylinderReportDetailMultiMarkup(records) : buildCylinderReportCompactMultiMarkup(records);
+  }
+  currentWorkOrderDocTitle=result.docTitle;
+  const area=q("fWorkOrderPrintArea");
+  area.classList.remove("sleeve-print","cylinder-report","cylinder-compact");
+  area.classList.add("cylinder-report");
+  if(currentCylinderReportMode==="compact") area.classList.add("cylinder-compact");
+  area.innerHTML=result.html;
+  setCylinderReportModeButtons(true,currentCylinderReportMode);
+  q("workOrderPreviewTitle").textContent=currentCylinderReportMode==="compact"?"油壓缸完整量測履歷｜集中比較版":"油壓缸完整量測履歷｜分段明細版";
+  preparePreviewZoom(currentCylinderReportMode==="compact"?"油壓缸完整量測履歷｜集中比較版":"油壓缸完整量測履歷｜分段明細版",{reset:false});
+  if(records.length===1){
+    const r=records[0], c=calc(r);
+    q("fWorkOrderPreviewStatus").textContent=`${r.cylinder}｜總判定：${c.overall}`;
+  }else{
+    const calcs=records.map(calc), ng=calcs.filter(c=>c.overall==="NG").length, pass=calcs.filter(c=>c.overall==="PASS").length, pending=calcs.length-ng-pass;
+    q("fWorkOrderPreviewStatus").textContent=`已選 ${records.length} 支｜PASS ${pass}｜NG ${ng}｜未完成 ${pending}`;
+  }
+}
+function switchCylinderReportMode(mode){
+  const records=currentCylinderReportRecords.length?currentCylinderReportRecords:(currentCylinderReportRecord?[currentCylinderReportRecord]:[]);
+  if(!records.length){alert("目前沒有油壓缸完整履歷可切換。 ");return;}
+  renderCurrentCylinderReportMode(mode);
+}
+
+function openCylinderReportRecord(r){
+  if(!r||!r.cylinder){alert("找不到油壓缸資料。 ");return;}
+  try{
+    const cloned=structuredClone(r);
+    currentCylinderReportRecord=cloned;
+    currentCylinderReportRecords=[cloned];
+    resetPreviewZoom();
+    renderCurrentCylinderReportMode("compact");
+    q("fWorkOrderPreviewPanel").style.display="block";
+    q("fWorkOrderPreviewPanel").scrollIntoView({behavior:"smooth",block:"start"});
+  }catch(e){
+    console.error(e);
+    alert("完整量測履歷產生失敗："+(e&&e.message?e.message:"未知錯誤"));
+  }
+}
+function openCylinderReportByIndex(i){
+  const r=getRecords()[i];
+  if(!r){alert("找不到該筆油壓缸資料。 ");return;}
+  // 若目前已有 2 支以上工單被勾選，右側任何一個「完整資料」按鈕
+  // 都直接顯示全部已選工單，避免使用者以為只能逐筆開啟。
+  if(historyWorkOrderSelection.size>1){
+    openSelectedCylinderReports();
+    return;
+  }
+  // 若只有 1 支被勾選，且該支就是目前點選的資料，沿用已選資料流程。
+  const cylKey=String(r.cylinder||"");
+  if(historyWorkOrderSelection.size===1 && historyWorkOrderSelection.has(cylKey)){
+    openSelectedCylinderReports();
+    return;
+  }
+  // 沒有多選時才維持原本單支完整資料。
+  openCylinderReportRecord(r);
+}
+function openCurrentCylinderReport(){
+  const r=inputRecord();
+  if(!r.cylinder){alert("請先選擇套筒工單／油壓缸編號。 ");goStep(4);return;}
+  persistCurrentFormSilently();
+  const saved=currentEdit!==null?getRecords()[currentEdit]:r;
+  openCylinderReportRecord(saved||r);
+}
+
+function exportCSV(){
+  const head=["油壓缸編號","軸承1編號","軸承1內徑","軸承1外徑","軸承1 ØF實測值","軸承1 ØB實測值","軸承2編號","軸承2內徑","軸承2外徑","軸承2 ØF實測值","軸承2 ØB實測值","ØF1實測值","ØC實測值","間隙","總判定"];
+  const lines=[head.join(",")];
+  getRecords().forEach(r=>{const c=calc(r),b1=r.bearings[0]||{},b2=r.bearings[1]||{};lines.push([r.cylinder,b1.bearing_no,b1.inner_d,b1.outer_e,b1.f_actual,b1.b_actual,b2.bearing_no,b2.inner_d,b2.outer_e,b2.f_actual,b2.b_actual,r.f1_actual,r.c_actual,c.gap,c.overall].map(csvCell).join(","))});
+  download("ML2816_QC_data_"+new Date().toISOString().slice(0,10)+".csv","\ufeff"+lines.join("\r\n"),"text/csv;charset=utf-8");
+}
+q("compactCylinderReportBtn").addEventListener("click",()=>switchCylinderReportMode("compact"));
+q("detailCylinderReportBtn").addEventListener("click",()=>switchCylinderReportMode("detail"));
+q("previewZoomOutBtn").addEventListener("click",()=>changePreviewZoom(-PREVIEW_ZOOM_STEP));
+q("previewZoomInBtn").addEventListener("click",()=>changePreviewZoom(PREVIEW_ZOOM_STEP));
+q("previewZoomResetBtn").addEventListener("click",resetPreviewZoom);
+q("printFWorkOrderBtn").addEventListener("click",printFWorkOrder);
+q("savePdfFWorkOrderBtn").addEventListener("click",saveFWorkOrderPDF);
+q("closeFWorkOrderBtn").addEventListener("click",closeFWorkOrderPreview);
+q("printStageZoomOutBtn").addEventListener("click",()=>changePrintStageZoom(-PRINT_STAGE_ZOOM_STEP));
+q("printStageZoomInBtn").addEventListener("click",()=>changePrintStageZoom(PRINT_STAGE_ZOOM_STEP));
+q("printStageZoomResetBtn").addEventListener("click",()=>setPrintStageZoom(1));
+q("printStageConfirmBtn").addEventListener("click",confirmPrintStage);
+q("printStageCloseBtn").addEventListener("click",closePrintStage);
+q("printStageOverlay").addEventListener("click",e=>{if(e.target===q("printStageOverlay")) closePrintStage();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&q("printStageOverlay").classList.contains("open")) closePrintStage();});
+window.addEventListener("afterprint",cleanupWorkOrderPrint);
+getRecords(); resetPreviewZoom(); renderBatchInputs(); suggestNextNumbers(); refresh(); renderHistory(); renderAnalysis(); renderRotaryWorkOrderSelect(); renderSleeveWorkOrderSelect();
+q("batchQty").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();applyBatchQty();}});
+</script>
+</body>
+</html>
