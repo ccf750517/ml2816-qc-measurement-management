@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ML2816 QC 量測管理介面 v1.10.1</title>
+<title>ML2816 QC 量測管理介面 v1.11.1</title>
 <style>
 :root{
   --bg:#f4f6f8; --panel:#ffffff; --line:#d8dee6; --text:#17202a; --muted:#657180;
@@ -384,6 +384,19 @@ canvas{width:100%;height:320px}
   header{align-items:flex-start;flex-direction:column}
 }
 @media(max-width:520px){.rulebar,.kpis{grid-template-columns:1fr}}
+
+/* v1.11.1｜Excel 匯出油壓缸複選 */
+.excel-export-range{margin-top:14px;background:#fbfcfd}
+.excel-export-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.excel-export-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px;max-height:330px;overflow:auto;padding:2px}
+.excel-export-item{display:flex;align-items:flex-start;gap:9px;padding:10px 11px;border:1px solid #d5dee7;border-radius:9px;background:#fff;cursor:pointer;min-width:0}
+.excel-export-item:hover{border-color:#8fa8bc;background:#f8fbfd}
+.excel-export-item input{width:auto!important;margin-top:3px;flex:0 0 auto}
+.excel-export-item .excel-cyl{font-weight:900;color:#183b56}
+.excel-export-item .excel-meta{font-size:12px;color:#718096;margin-top:2px;line-height:1.35}
+.excel-export-item .excel-state{margin-left:auto;flex:0 0 auto}
+#backupExcelSelectionHint{font-size:13px;color:#586b7c}
+@media(max-width:620px){.excel-export-grid{grid-template-columns:1fr;max-height:420px}.excel-export-head .actions{width:100%}.excel-export-head .actions button{flex:1 1 auto}}
 </style>
 </head>
 <body>
@@ -651,7 +664,8 @@ canvas{width:100%;height:320px}
       <button class="primary" type="button" onclick="exportSelectedHistoryFWorkOrder()">輸出已選 ØF 加工單</button>
       <button class="secondary" type="button" onclick="exportSelectedHistorySleeveWorkOrder()">輸出已選套筒研磨尺寸表</button>
       <span class="note" id="historyWorkOrderSelectionHint">尚未選取工單</span>
-      <button class="primary" onclick="exportExcelXLSX()">匯出 Excel (.xlsx)</button>
+      <button class="primary" id="historyExportSelectedExcelBtn" onclick="exportSelectedExcelXLSX()" disabled>匯出已選 Excel</button>
+      <button class="secondary" onclick="exportExcelXLSX()">匯出全部 Excel</button>
       <button class="secondary" onclick="exportCSV()">匯出 CSV</button>
     </div>
     <div class="tablewrap">
@@ -691,9 +705,24 @@ canvas{width:100%;height:320px}
       <label class="secondary" style="display:inline-flex;align-items:center;cursor:pointer;padding:9px 14px;border:1px solid #b8c4cf;border-radius:8px">
         匯入／還原備份<input id="importFile" type="file" accept=".json,.ml2816,application/json" style="display:none" onchange="importDatabaseBackup(event)">
       </label>
-      <button class="primary" onclick="exportExcelXLSX()">匯出 Excel (.xlsx)</button>
+      <button class="primary" id="backupExportSelectedExcelBtn" onclick="exportSelectedExcelXLSX()" disabled>匯出已選 Excel</button>
+      <button class="secondary" onclick="exportExcelXLSX()">匯出全部 Excel</button>
       <button class="secondary" onclick="exportCSV()">匯出 CSV</button>
       <button class="danger" onclick="restorePreloaded()">還原成原始 ML2816_04 資料</button>
+    </div>
+    <div class="panel excel-export-range" id="backupExcelSelectionPanel">
+      <div class="excel-export-head">
+        <div>
+          <b>Excel 匯出範圍｜選擇油壓缸</b>
+          <div class="note" id="backupExcelSelectionHint">尚未選取油壓缸；可逐支勾選後只匯出需要的資料。</div>
+        </div>
+        <div class="actions" style="margin-top:0">
+          <button class="secondary" type="button" onclick="selectAllExcelRecords()">全選全部</button>
+          <button class="secondary" type="button" onclick="clearExcelRecordSelection()">清除選取</button>
+          <button class="primary" type="button" id="backupExportSelectedExcelBtn2" onclick="exportSelectedExcelXLSX()" disabled>匯出已選 Excel</button>
+        </div>
+      </div>
+      <div id="backupExcelSelectionList" class="excel-export-grid"></div>
     </div>
     <div class="panel" style="margin-top:16px;background:#fbfcfd">
       <b>備份檔內容</b>
@@ -701,7 +730,7 @@ canvas{width:100%;height:320px}
     </div>
     <div class="panel" style="margin-top:12px;background:#fbfcfd">
       <b>Excel 匯出</b>
-      <div class="note">直接產生標準 <b>.xlsx</b> 檔，不使用 SheetJS/CDN 等外部程式庫；Excel 內容包含原始量測值、計算規格、各項 PASS／NG、間隙與總判定，可供篩選、留查與後續分析。</div>
+      <div class="note">可選擇一支或多支油壓缸匯出，也可匯出全部資料。直接產生標準 <b>.xlsx</b> 檔，不使用 SheetJS/CDN 等外部程式庫；Excel 內容包含原始量測值、計算規格、各項 PASS／NG、間隙與總判定。</div>
     </div>
   </div>
 </section>
@@ -1156,9 +1185,19 @@ function updateHistoryWorkOrderSelectionHint(){
     delBtn.textContent=count ? `刪除已選資料（${count}）` : "刪除已選資料";
     delBtn.title=count ? `刪除目前勾選的 ${count} 筆完整資料` : "請先勾選要刪除的資料";
   }
+  ["historyExportSelectedExcelBtn","backupExportSelectedExcelBtn","backupExportSelectedExcelBtn2"].forEach(id=>{
+    const b=q(id); if(!b)return;
+    b.disabled=count===0;
+    b.textContent=count ? `匯出已選 Excel（${count}）` : "匯出已選 Excel";
+  });
+  const backupHint=q("backupExcelSelectionHint");
+  if(backupHint) backupHint.innerHTML=count ? `已選 <b>${count}</b> 支油壓缸；Excel 只會匯出這些資料。` : "尚未選取油壓缸；可逐支勾選後只匯出需要的資料。";
 }
 function toggleHistoryWorkOrder(cylinder,checked){
   if(checked) historyWorkOrderSelection.add(cylinder); else historyWorkOrderSelection.delete(cylinder);
+  document.querySelectorAll(".historyWorkOrderCheck,.backupExcelRecordCheck").forEach(cb=>{
+    if(String(cb.dataset.cylinder||"")===String(cylinder||"")) cb.checked=checked;
+  });
   updateHistoryWorkOrderSelectionHint();
 }
 function visibleHistoryRecords(){
@@ -1176,6 +1215,40 @@ function selectAllVisibleHistoryWorkOrders(){
 function clearHistoryWorkOrderSelection(){
   historyWorkOrderSelection.clear();
   renderHistory();
+  renderBackupExcelSelection();
+}
+function renderBackupExcelSelection(){
+  const host=q("backupExcelSelectionList");
+  if(!host) return;
+  const arr=getRecords();
+  if(!arr.length){
+    host.innerHTML='<div class="note">目前沒有可匯出的油壓缸資料。</div>';
+    updateHistoryWorkOrderSelectionHint();
+    return;
+  }
+  host.innerHTML=arr.map(r=>{
+    const cyl=String(r.cylinder||"");
+    const c=calc(r),b1=r.bearings?.[0]?.bearing_no||"—",b2=r.bearings?.[1]?.bearing_no||"—";
+    return `<label class="excel-export-item">
+      <input type="checkbox" class="backupExcelRecordCheck" data-cylinder="${esc(cyl)}" ${historyWorkOrderSelection.has(cyl)?"checked":""}>
+      <span><span class="excel-cyl">${esc(cyl||"未編號")}</span><span class="excel-meta">軸承 ${esc(b1)} / ${esc(b2)}</span></span>
+      <span class="excel-state">${badge(c.overall)}</span>
+    </label>`;
+  }).join("");
+  host.querySelectorAll(".backupExcelRecordCheck").forEach(cb=>cb.addEventListener("change",()=>{
+    toggleHistoryWorkOrder(cb.dataset.cylinder,cb.checked);
+  }));
+  updateHistoryWorkOrderSelectionHint();
+}
+function selectAllExcelRecords(){
+  getRecords().forEach(r=>historyWorkOrderSelection.add(String(r.cylinder||"")));
+  renderBackupExcelSelection();
+  if(q("history")?.classList.contains("active")) renderHistory();
+}
+function clearExcelRecordSelection(){
+  historyWorkOrderSelection.clear();
+  renderBackupExcelSelection();
+  if(q("history")?.classList.contains("active")) renderHistory();
 }
 function renderHistory(){
   const s=(q("search")?.value||"").trim().toLowerCase(), sf=q("statusFilter")?.value||"";
@@ -1202,7 +1275,7 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&l
 function showView(id){
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id===id));
   document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x.dataset.view===id));
-  if(id==="history")renderHistory(); if(id==="analysis")renderAnalysis(); if(id==="bearingIntake")suggestNextNumbers();
+  if(id==="history")renderHistory(); if(id==="analysis")renderAnalysis(); if(id==="bearingIntake")suggestNextNumbers(); if(id==="backup")renderBackupStatus();
 }
 document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.view)));
 document.querySelectorAll(".stepchip").forEach(b=>b.addEventListener("click",()=>goStep(Number(b.dataset.step))));
@@ -1316,6 +1389,7 @@ function renderBackupStatus(){
     const raw=localStorage.getItem(LAST_BACKUP_KEY);
     last.textContent=raw ? new Date(raw).toLocaleString() : "尚未記錄";
   }
+  renderBackupExcelSelection();
 }
 function restorePreloaded(){if(confirm("確定以原始 ML2816_04 資料覆蓋目前所有資料？")){setRecords(structuredClone(PRELOADED));renderHistory();renderAnalysis();newRecord();renderBackupStatus();alert("已還原。");}}
 function csvCell(v){const s=String(v??"");return /[",\n]/.test(s)?`"${s.replaceAll('"','""')}"`:s}
@@ -2316,14 +2390,14 @@ function xlsxCellXml(ref,v,style){
   return `<c r="${ref}" s="${s}" t="inlineStr"><is><t>${xmlEsc(v)}</t></is></c>`;
 }
 function xlsxRound3(v){return (v===null||v===undefined||v===""||!Number.isFinite(Number(v)))?null:Math.round(Number(v)*1000)/1000;}
-function buildExcelExportRows(){
+function buildExcelExportRows(records=getRecords()){
   const headers=[
     "油壓缸編號","迴轉閥製造日期","套筒製造日期",
     "軸承1編號","軸承1購入日期","軸承1內徑D","軸承1外徑E","軸承1 ØF下限","軸承1 ØF上限","軸承1 ØF實測值","軸承1 ØF判定","軸承1 ØB下限","軸承1 ØB上限","軸承1 ØB實測值","軸承1 ØB判定",
     "軸承2編號","軸承2購入日期","軸承2內徑D","軸承2外徑E","軸承2 ØF下限","軸承2 ØF上限","軸承2 ØF實測值","軸承2 ØF判定","軸承2 ØB下限","軸承2 ØB上限","軸承2 ØB實測值","軸承2 ØB判定",
     "ØF1下限","ØF1上限","ØF1實測值","ØF1判定","ØC下限","ØC上限","ØC實測值","ØC判定","間隙","間隙判定","總判定","資料來源"
   ];
-  const rows=getRecords().map(r=>{
+  const rows=(records||[]).map(r=>{
     const c=calc(r),b1=r.bearings?.[0]||{},b2=r.bearings?.[1]||{};
     return [
       r.cylinder,r.rotary_mfg_date,r.sleeve_mfg_date,
@@ -2363,9 +2437,11 @@ function xlsxStylesXml(){return `<?xml version="1.0" encoding="UTF-8" standalone
 <cellXfs count="7"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf><xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf><xf numFmtId="0" fontId="2" fillId="3" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf><xf numFmtId="0" fontId="3" fillId="4" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf></cellXfs>
 <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
 </styleSheet>`;}
-function exportExcelXLSX(){
+function exportExcelXLSX(records=null,scopeLabel="全部"){
   try{
-    const {headers,rows}=buildExcelExportRows();
+    const source=Array.isArray(records)?records:getRecords();
+    if(!source.length){alert("目前沒有可匯出的資料。");return;}
+    const {headers,rows}=buildExcelExportRows(source);
     const sheet=buildSheetXml(headers,rows);
     const files=[
       {name:"[Content_Types].xml",data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`},
@@ -2378,8 +2454,15 @@ function exportExcelXLSX(){
     const bytes=makeStoreZip(files);
     const blob=new Blob([bytes],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
     const url=URL.createObjectURL(blob),a=document.createElement("a");
-    a.href=url;a.download=`ML2816_QC_完整量測資料_${localTimestampForFile()}.xlsx`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    const safeScope=String(scopeLabel||"全部").replace(/[^0-9A-Za-z一-鿿_-]+/g,"_");
+    a.href=url;a.download=`ML2816_QC_${safeScope}_${source.length}筆_${localTimestampForFile()}.xlsx`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
   }catch(e){console.error(e);alert("Excel 匯出失敗："+(e?.message||"未知錯誤"));}
+}
+function exportSelectedExcelXLSX(){
+  if(historyWorkOrderSelection.size===0){alert("請先勾選要匯出的油壓缸。\n\n可在『備份／還原』的 Excel 匯出範圍，或『歷史資料』中勾選。");return;}
+  const selected=getRecords().filter(r=>historyWorkOrderSelection.has(String(r.cylinder||"")));
+  if(!selected.length){alert("找不到已選取的油壓缸資料，請重新選擇。");return;}
+  exportExcelXLSX(selected,"已選油壓缸");
 }
 
 function exportCSV(){
