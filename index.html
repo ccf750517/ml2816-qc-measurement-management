@@ -2433,6 +2433,7 @@ function buildDetailSheetXml(headers,rows){
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><dimension ref="A1:${lastCol}${lastRow}"/><sheetViews><sheetView workbookViewId="0" showGridLines="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="18"/><cols>${cols}</cols><sheetData>${rowXml.join("")}</sheetData><autoFilter ref="A1:${lastCol}${lastRow}"/><printOptions horizontalCentered="1"/><pageMargins left="0.20" right="0.20" top="0.30" bottom="0.30" header="0" footer="0"/><pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/></worksheet>`;
 }
 function printSheetCell(ref,v,style=8){return xlsxCellXml(ref,v,style);}
+// v1.11.3：Excel 橫式列印總表框線補齊；合併儲存格邊界與主表文字欄統一深色框線。
 function buildPrintSheetXml(records,scopeLabel="已選油壓缸"){
   const list=records||[];
   const rows=[];
@@ -2444,14 +2445,14 @@ function buildPrintSheetXml(records,scopeLabel="已選油壓缸"){
   const meta=`匯出日期：${new Date().toLocaleDateString("zh-TW")}　｜　油壓缸數量：${list.length} 支　｜　尺寸單位：mm　｜　A4 橫向單頁列印`;
   rows.push(`<row r="2" ht="20" customHeight="1">${printSheetCell("A2",meta,8)}</row>`);
   merges.push("A2:N2");
-  rows.push(`<row r="3" ht="24" customHeight="1">${printSheetCell("A3","油壓缸編號",9)}${printSheetCell("B3","軸　承",10)}${printSheetCell("F3","迴　轉　閥",11)}${printSheetCell("J3","套　筒",12)}</row>`);
+  rows.push(`<row r="3" ht="24" customHeight="1">${printSheetCell("A3","油壓缸編號",9)}${printSheetCell("B3","軸　承",10)}${printSheetCell("C3","",10)}${printSheetCell("D3","",10)}${printSheetCell("E3","",10)}${printSheetCell("F3","迴　轉　閥",11)}${printSheetCell("G3","",11)}${printSheetCell("H3","",11)}${printSheetCell("I3","",11)}${printSheetCell("J3","套　筒",12)}${printSheetCell("K3","",12)}${printSheetCell("L3","",12)}${printSheetCell("M3","",12)}${printSheetCell("N3","",12)}</row>`);
   merges.push("A3:A4","B3:E3","F3:I3","J3:N3");
   const sub=[
     ["B4","軸承編號",13],["C4","購入日期",13],["D4","內徑 D",13],["E4","外徑 E",13],
     ["F4","製造日期",14],["G4","ØF 規格",14],["H4","ØF 實測值",14],["I4","ØF1 實測值",14],
     ["J4","製造日期",15],["K4","ØB 規格",15],["L4","ØB 實測值",15],["M4","ØC 規格",15],["N4","ØC 實測值",15]
   ];
-  rows.push(`<row r="4" ht="26" customHeight="1">${sub.map(([ref,v,st])=>printSheetCell(ref,v,st)).join("")}</row>`);
+  rows.push(`<row r="4" ht="26" customHeight="1">${printSheetCell("A4","",9)}${sub.map(([ref,v,st])=>printSheetCell(ref,v,st)).join("")}</row>`);
   let rr=5;
   list.forEach(rec=>{
     const c=calc(rec),b1=rec.bearings?.[0]||{},b2=rec.bearings?.[1]||{};
@@ -2459,35 +2460,41 @@ function buildPrintSheetXml(records,scopeLabel="已選油壓缸"){
     const ngStyle=(status,isNum=true)=>status==="NG"?(isNum?17:18):(isNum?16:8);
     const row1=[];
     row1.push(printSheetCell(`A${r1}`,rec.cylinder||"",19));
-    row1.push(printSheetCell(`B${r1}`,b1.bearing_no||"",2));
-    row1.push(printSheetCell(`C${r1}`,b1.purchase_date||"",2));
+    row1.push(printSheetCell(`B${r1}`,b1.bearing_no||"",19));
+    row1.push(printSheetCell(`C${r1}`,b1.purchase_date||"",19));
     row1.push(printSheetCell(`D${r1}`,xlsxRound3(b1.inner_d),16));
     row1.push(printSheetCell(`E${r1}`,xlsxRound3(b1.outer_e),16));
-    row1.push(printSheetCell(`F${r1}`,rec.rotary_mfg_date||"",2));
-    row1.push(printSheetCell(`G${r1}`,xlsxRangeText(c.bearings[0]?.fLow,c.bearings[0]?.fHigh),2));
+    row1.push(printSheetCell(`F${r1}`,rec.rotary_mfg_date||"",19));
+    row1.push(printSheetCell(`G${r1}`,xlsxRangeText(c.bearings[0]?.fLow,c.bearings[0]?.fHigh),19));
     row1.push(printSheetCell(`H${r1}`,xlsxRound3(b1.f_actual),ngStyle(c.bearings[0]?.fStatus)));
     row1.push(printSheetCell(`I${r1}`,xlsxRound3(rec.f1_actual),ngStyle(c.f1Status)));
-    row1.push(printSheetCell(`J${r1}`,rec.sleeve_mfg_date||"",2));
-    row1.push(printSheetCell(`K${r1}`,xlsxRangeText(c.bearings[0]?.bLow,c.bearings[0]?.bHigh),2));
+    row1.push(printSheetCell(`J${r1}`,rec.sleeve_mfg_date||"",19));
+    row1.push(printSheetCell(`K${r1}`,xlsxRangeText(c.bearings[0]?.bLow,c.bearings[0]?.bHigh),19));
     row1.push(printSheetCell(`L${r1}`,xlsxRound3(b1.b_actual),ngStyle(c.bearings[0]?.bStatus)));
-    row1.push(printSheetCell(`M${r1}`,xlsxRangeText(c.cLow,c.cHigh),2));
+    row1.push(printSheetCell(`M${r1}`,xlsxRangeText(c.cLow,c.cHigh),19));
     row1.push(printSheetCell(`N${r1}`,xlsxRound3(rec.c_actual),ngStyle(c.cStatus)));
     rows.push(`<row r="${r1}" ht="21" customHeight="1">${row1.join("")}</row>`);
     const row2=[];
-    row2.push(printSheetCell(`B${r2}`,b2.bearing_no||"",2));
-    row2.push(printSheetCell(`C${r2}`,b2.purchase_date||"",2));
+    row2.push(printSheetCell(`A${r2}`,"",19));
+    row2.push(printSheetCell(`B${r2}`,b2.bearing_no||"",19));
+    row2.push(printSheetCell(`C${r2}`,b2.purchase_date||"",19));
     row2.push(printSheetCell(`D${r2}`,xlsxRound3(b2.inner_d),16));
     row2.push(printSheetCell(`E${r2}`,xlsxRound3(b2.outer_e),16));
-    row2.push(printSheetCell(`G${r2}`,xlsxRangeText(c.bearings[1]?.fLow,c.bearings[1]?.fHigh),2));
+    row2.push(printSheetCell(`F${r2}`,"",19));
+    row2.push(printSheetCell(`G${r2}`,xlsxRangeText(c.bearings[1]?.fLow,c.bearings[1]?.fHigh),19));
     row2.push(printSheetCell(`H${r2}`,xlsxRound3(b2.f_actual),ngStyle(c.bearings[1]?.fStatus)));
-    row2.push(printSheetCell(`K${r2}`,xlsxRangeText(c.bearings[1]?.bLow,c.bearings[1]?.bHigh),2));
+    row2.push(printSheetCell(`I${r2}`,"",19));
+    row2.push(printSheetCell(`J${r2}`,"",19));
+    row2.push(printSheetCell(`K${r2}`,xlsxRangeText(c.bearings[1]?.bLow,c.bearings[1]?.bHigh),19));
     row2.push(printSheetCell(`L${r2}`,xlsxRound3(b2.b_actual),ngStyle(c.bearings[1]?.bStatus)));
+    row2.push(printSheetCell(`M${r2}`,"",19));
+    row2.push(printSheetCell(`N${r2}`,"",19));
     rows.push(`<row r="${r2}" ht="21" customHeight="1">${row2.join("")}</row>`);
     merges.push(`A${r1}:A${r2}`,`F${r1}:F${r2}`,`I${r1}:I${r2}`,`J${r1}:J${r2}`,`M${r1}:M${r2}`,`N${r1}:N${r2}`);
     rr+=2;
   });
   const ruleRow=rr;
-  rows.push(`<row r="${ruleRow}" ht="21" customHeight="1">${printSheetCell(`A${ruleRow}`,"規則：ØF＝軸承內徑 D +0.015～+0.020；ØF1＝ØF實測值 −0.030～−0.020；ØB＝軸承外徑 E −0.020～−0.010；ØC＝ØF1 +0.080～+0.085。異常實測值以紅字顯示。",20)}</row>`);
+  rows.push(`<row r="${ruleRow}" ht="21" customHeight="1">${printSheetCell(`A${ruleRow}`,"規則：ØF＝軸承內徑 D +0.015～+0.020；ØF1＝ØF實測值 −0.030～−0.020；ØB＝軸承外徑 E −0.020～−0.010；ØC＝ØF1 +0.080～+0.085。異常實測值以紅字顯示。",20)}${Array.from({length:13},(_,i)=>printSheetCell(`${xlsxColName(i+2)}${ruleRow}`,"",20)).join("")}</row>`);
   merges.push(`A${ruleRow}:N${ruleRow}`);
   const signRow=rr+1;
   rows.push(`<row r="${signRow}" ht="28" customHeight="1">${printSheetCell(`A${signRow}`,"製表：________________",21)}${printSheetCell(`F${signRow}`,"覆核：________________",21)}${printSheetCell(`J${signRow}`,"主管：________________",21)}</row>`);
